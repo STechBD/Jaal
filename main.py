@@ -15,16 +15,22 @@ License URI: https://opensource.org/licenses/MIT
 import sys
 from urllib.parse import urlparse
 from PyQt6.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QHBoxLayout, QLineEdit, QTabWidget, QMenu, \
-	QMenuBar, QStatusBar, QMessageBox, QToolBar
+    QMenuBar, QStatusBar, QMessageBox, QToolBar
 from PyQt6.QtGui import QAction, QIcon
 from PyQt6.QtWebEngineWidgets import QWebEngineView
 from PyQt6.QtCore import Qt, QUrl
 
 
 class PyWeb:
-	# Main class
+    def __init__(self):
+        super().__init__()
+
+        self.tab = None
+        self.setWindowTitle('PyWeb Browser')
+        self.setWindowIcon(QIcon('image/PyWeb-Logo.webp'))
+
 
 if __name__ == '__main__':
-	app = QApplication([])
-	window = PyWeb()
-	app.exec()
+    app = QApplication([])
+    window = PyWeb()
+    app.exec()

@@ -194,7 +194,7 @@ class PyWeb:
 
 	def go_home(self):
 		if self.tab:
-			self.tab.load(QUrl('https://www.ulkaa.com'))
+			self.tab.load(QUrl('https://www.stechbd.net'))
 
 
 if __name__ == '__main__':

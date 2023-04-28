@@ -149,6 +149,21 @@ class PyWeb:
 		self.tabs.addTab(self.tab, 'New Tab')
 		self.tabs.setCurrentWidget(self.tab)
 
+	def tab_load_started(self):
+		self.status_bar.showMessage('Loading ...')
+
+	def tab_load_finished(self):
+		self.status_bar.showMessage('Page loaded')
+
+		# Add Favicon
+		# Add Current URL to the History
+		url = self.tab.url().toString()
+		if url not in self.history_list:
+			self.history_list.append(url)
+
+		# Update the Address Bar
+		self.url_input.setText(url)
+
 
 if __name__ == '__main__':
 	app = QApplication([])

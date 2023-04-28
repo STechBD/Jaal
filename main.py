@@ -26,7 +26,6 @@ class PyWeb(QMainWindow):
 		super().__init__()
 
 		self.tab = None
-		self.url_input = None
 		self.setWindowTitle('PyWeb Browser')
 		self.setWindowIcon(QIcon('image/PyWeb-Logo.webp'))
 
@@ -93,6 +92,10 @@ class PyWeb(QMainWindow):
 		self.about_action.triggered.connect(self.about)
 		self.help_menu.addAction(self.about_action)
 
+		# Status Bar
+		self.status_bar = self.statusBar()
+		self.status_bar.showMessage('Welcome')
+
 		# Tool Bar
 		self.tool_bar = QToolBar()
 		self.addToolBar(self.tool_bar)
@@ -140,28 +143,28 @@ class PyWeb(QMainWindow):
 
 	# Create Tab
 	def create_tab(self):
-		self.tab = QWebEngineView
-		self.tab.setUrl(QUrl('https://www.stechbd.net'))
+		self.tab = QWebEngineView()
+		self.tab.load(QUrl('https://www.stechbd.net'))
 		self.tab.titleChanged.connect(lambda title: self.tabs.setTabText(self.tabs.indexOf(self.tab), title))
-		self.tab.urlChanged.connect(self.update_urlbar)
-		self.tab.loadFinished.connect(self.update_title)
-		self.tabs.addTab(self.tab, 'New Tab')
+		self.tab.loadStarted.connect(self.tab_load_started)
+		self.tab.loadFinished.connect(self.tab_load_finished)
 		self.tabs.setCurrentWidget(self.tab)
 
 	def tab_load_started(self):
 		self.status_bar.showMessage('Loading ...')
 
 	def tab_load_finished(self):
-		self.status_bar.showMessage('Page loaded')
+		self.status_bar.showMessage('Page is ready')
+		url = self.tab.url().toString()
 
 		# UC # Add Favicon
-		# Add Current URL to the History
-		url = self.tab.url().toString()
-		if url not in self.history_list:
-			self.history_list.append(url)
 
 		# Update the Address Bar
 		self.url_input.setText(url)
+
+		# Add Current URL to the History
+		if url not in self.history_list:
+			self.history_list.append(url)
 
 	def add_bookmark(self):
 		# Display the Bookmark List in a Message Box

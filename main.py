@@ -164,6 +164,38 @@ class PyWeb:
 		# Update the Address Bar
 		self.url_input.setText(url)
 
+	def show_history(self):
+		# display the history list in a message box
+		message_box = QMessageBox()
+		message_box.setText("\n".join(self.history_list))
+		message_box.exec()
+
+	def close_tab(self, index):
+		self.tabs.removeTab(index)
+
+		# If there is no tab left, create a new one
+		if self.tabs.count() == 0:
+			self.create_tab()
+
+	def about(self):
+		QMessageBox.about(self, 'About PyWeb Browser', 'PyWeb is a desktop app for browsing websites.')
+
+	def back(self):
+		if self.tab:
+			self.tab.back()
+
+	def forward(self):
+		if self.tab:
+			self.tab.forward()
+
+	def reload(self):
+		if self.tab:
+			self.tab.reload()
+
+	def go_home(self):
+		if self.tab:
+			self.tab.load(QUrl('https://www.ulkaa.com'))
+
 
 if __name__ == '__main__':
 	app = QApplication([])

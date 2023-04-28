@@ -21,11 +21,12 @@ from PyQt6.QtWebEngineWidgets import QWebEngineView
 from PyQt6.QtCore import Qt, QUrl
 
 
-class PyWeb:
+class PyWeb(QMainWindow):
 	def __init__(self):
 		super().__init__()
 
 		self.tab = None
+		self.url_input = None
 		self.setWindowTitle('PyWeb Browser')
 		self.setWindowIcon(QIcon('image/PyWeb-Logo.webp'))
 
@@ -67,6 +68,10 @@ class PyWeb:
 		self.edit_menu.addAction(self.remove_bookmark_action)
 
 		# View Menu
+		self.toggle_toolbar_action = QAction('Toggle Toolbar', self)
+		self.toggle_toolbar_action.triggered.connect(self.toggle_toolbar)
+		self.view_menu.addAction(self.toggle_toolbar_action)
+
 		self.back_action = QAction('Back', self)
 		self.back_action.triggered.connect(self.back)
 		self.view_menu.addAction(self.back_action)
@@ -80,17 +85,13 @@ class PyWeb:
 		self.view_menu.addAction(self.reload_action)
 
 		self.stop_action = QAction('Stop', self)
-		self.stop_action.triggered.connect(self.stop)
+		# UC # self.stop_action.triggered.connect(self.stop)
 		self.view_menu.addAction(self.stop_action)
 
 		# Help Menu
 		self.about_action = QAction('About', self)
-		self.about_action.triggered.connect(self.show_about)
+		self.about_action.triggered.connect(self.about)
 		self.help_menu.addAction(self.about_action)
-
-		self.about_qt_action = QAction('About Qt', self)
-		self.about_qt_action.triggered.connect(self.show_about_qt)
-		self.help_menu.addAction(self.about_qt_action)
 
 		# Tool Bar
 		self.tool_bar = QToolBar()
@@ -109,14 +110,12 @@ class PyWeb:
 		self.tool_bar.addAction(self.reload_action)
 
 		self.stop_action = QAction(QIcon('image/stop.png'), 'Stop', self)
-		self.stop_action.triggered.connect(self.stop)
+		# UC # self.stop_action.triggered.connect(self.stop)
 		self.tool_bar.addAction(self.stop_action)
 
-		self.tool_bar.addSeparator()
-
-		self.home_action = QAction(QIcon('image/home.png'), 'Home', self)
-		self.home_action.triggered.connect(self.home)
-		self.tool_bar.addAction(self.home_action)
+		self.home_button = QAction(QIcon('icon/home.svg'), 'Home', self)
+		self.home_button.triggered.connect(self.go_home)
+		self.tool_bar.addAction(self.home_button)
 
 		self.tool_bar.addSeparator()
 
@@ -155,7 +154,7 @@ class PyWeb:
 	def tab_load_finished(self):
 		self.status_bar.showMessage('Page loaded')
 
-		# Add Favicon
+		# UC # Add Favicon
 		# Add Current URL to the History
 		url = self.tab.url().toString()
 		if url not in self.history_list:
@@ -164,8 +163,32 @@ class PyWeb:
 		# Update the Address Bar
 		self.url_input.setText(url)
 
+	def add_bookmark(self):
+		# Display the Bookmark List in a Message Box
+		message_box = QMessageBox()
+		# UC # message_box.setText("\n".join(self.bookmark_list))
+		message_box.exec()
+
+	def remove_bookmark(self):
+		# Display the Bookmark List in a Message Box
+		message_box = QMessageBox()
+		# UC # message_box.setText("\n".join(self.bookmark_list))
+		message_box.exec()
+
+	def show_bookmarks(self):
+		# Display the Bookmark List in a Message Box
+		message_box = QMessageBox()
+		# UC # message_box.setText("\n".join(self.bookmark_list))
+		message_box.exec()
+
+	def show_settings(self):
+		# Display the Bookmark List in a Message Box
+		message_box = QMessageBox()
+		# UC # message_box.setText("\n".join(self.bookmark_list))
+		message_box.exec()
+
 	def show_history(self):
-		# display the history list in a message box
+		# Display the History List in a Message Box
 		message_box = QMessageBox()
 		message_box.setText("\n".join(self.history_list))
 		message_box.exec()
@@ -195,6 +218,24 @@ class PyWeb:
 	def go_home(self):
 		if self.tab:
 			self.tab.load(QUrl('https://www.stechbd.net'))
+
+	def load_url(self):
+		url = self.url_input.text().strip()
+		if url:
+			if not urlparse(url).scheme:
+				url = 'https://' + url
+
+		self.tab.load(QUrl(url))
+
+	def toggle_toolbar(self, checked):
+		if checked:
+			self.toolbar.show()
+		else:
+			self.toolbar.hide()
+
+
+def exit_browser():
+	sys.exit()
 
 
 if __name__ == '__main__':

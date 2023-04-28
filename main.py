@@ -26,6 +26,7 @@ class PyWeb(QMainWindow):
 		super().__init__()
 
 		self.tab = None
+		self.url_input = QLineEdit()
 		self.setWindowTitle('PyWeb Browser')
 		self.setWindowIcon(QIcon('image/PyWeb-Logo.webp'))
 
@@ -100,17 +101,17 @@ class PyWeb(QMainWindow):
 		self.tool_bar = QToolBar()
 		self.addToolBar(self.tool_bar)
 
-		self.back_action = QAction(QIcon('image/back.png'), 'Back', self)
-		self.back_action.triggered.connect(self.back)
-		self.tool_bar.addAction(self.back_action)
+		self.back_button = QAction(QIcon('icon/back.svg'), 'Back', self)
+		self.back_button.triggered.connect(self.back)
+		self.tool_bar.addAction(self.back_button)
 
-		self.forward_action = QAction(QIcon('image/forward.png'), 'Forward', self)
-		self.forward_action.triggered.connect(self.forward)
-		self.tool_bar.addAction(self.forward_action)
+		self.forward_button = QAction(QIcon('icon/forward.svg'), 'Forward', self)
+		self.forward_button.triggered.connect(self.forward)
+		self.tool_bar.addAction(self.forward_button)
 
-		self.reload_action = QAction(QIcon('image/reload.png'), 'Reload', self)
-		self.reload_action.triggered.connect(self.reload)
-		self.tool_bar.addAction(self.reload_action)
+		self.reload_button = QAction(QIcon('icon/reload.svg'), 'Reload', self)
+		self.reload_button.triggered.connect(self.reload)
+		self.tool_bar.addAction(self.reload_button)
 
 		self.stop_action = QAction(QIcon('image/stop.png'), 'Stop', self)
 		# UC # self.stop_action.triggered.connect(self.stop)
@@ -120,13 +121,17 @@ class PyWeb(QMainWindow):
 		self.home_button.triggered.connect(self.go_home)
 		self.tool_bar.addAction(self.home_button)
 
+		self.url_input = QLineEdit(self)
+		self.url_input.returnPressed.connect(lambda: self.load_url())
+		self.tool_bar.addWidget(self.url_input)
+
 		self.tool_bar.addSeparator()
 
-		self.add_bookmark_action = QAction(QIcon('image/add-bookmark.png'), 'Add Bookmark', self)
+		self.add_bookmark_action = QAction(QIcon('icon/add-bookmark.svg'), 'Add Bookmark', self)
 		self.add_bookmark_action.triggered.connect(self.add_bookmark)
 		self.tool_bar.addAction(self.add_bookmark_action)
 
-		self.remove_bookmark_action = QAction(QIcon('image/remove-bookmark.png'), 'Remove Bookmark', self)
+		self.remove_bookmark_action = QAction(QIcon('icon/remove-bookmark.svg'), 'Remove Bookmark', self)
 		self.remove_bookmark_action.triggered.connect(self.remove_bookmark)
 		self.tool_bar.addAction(self.remove_bookmark_action)
 
@@ -232,9 +237,9 @@ class PyWeb(QMainWindow):
 
 	def toggle_toolbar(self, checked):
 		if checked:
-			self.toolbar.show()
+			self.tool_bar.show()
 		else:
-			self.toolbar.hide()
+			self.tool_bar.hide()
 
 
 def exit_browser():

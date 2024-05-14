@@ -8,7 +8,7 @@ Developer: S Technologies
 Developer URI: https://www.stechbd.net
 GitHub Repository: https://github.com/STechBD/PyWeb
 Created: April 24, 2023
-Updated: April 26, 2023
+Updated: May 14, 2024
 License: MIT
 License URI: https://opensource.org/licenses/MIT
 """
@@ -42,6 +42,12 @@ class PyWeb(QMainWindow):
         self.url_input = QLineEdit()
         self.setWindowTitle('PyWeb Browser')
         self.setWindowIcon(QIcon('image/PyWeb-Logo.webp'))
+
+        # Tab Widget
+        self.tabs = QTabWidget()
+        self.tabs.setTabsClosable(True)
+        self.tabs.tabCloseRequested.connect(self.close_tab)
+        self.setCentralWidget(self.tabs)
 
         # Menu Bar
         self.menu_bar = self.menuBar()
@@ -111,55 +117,45 @@ class PyWeb(QMainWindow):
         self.status_bar.showMessage('Welcome')
 
         # Tool Bar
-        self.tool_bar = QToolBar()
-        self.addToolBar(self.tool_bar)
+        self.toolbar = QToolBar()
+        self.addToolBar(self.toolbar)
 
         self.back_button = QAction(QIcon('icon/back.svg'), 'Back', self)
         self.back_button.triggered.connect(self.back)
-        self.tool_bar.addAction(self.back_button)
+        self.toolbar.addAction(self.back_button)
 
         self.forward_button = QAction(QIcon('icon/forward.svg'), 'Forward', self)
         self.forward_button.triggered.connect(self.forward)
-        self.tool_bar.addAction(self.forward_button)
+        self.toolbar.addAction(self.forward_button)
 
         self.reload_button = QAction(QIcon('icon/reload.svg'), 'Reload', self)
         self.reload_button.triggered.connect(self.reload)
-        self.tool_bar.addAction(self.reload_button)
-
-        self.stop_action = QAction(QIcon('image/stop.png'), 'Stop', self)
-        # UC # self.stop_action.triggered.connect(self.stop)
-        self.tool_bar.addAction(self.stop_action)
+        self.toolbar.addAction(self.reload_button)
 
         self.home_button = QAction(QIcon('icon/home.svg'), 'Home', self)
         self.home_button.triggered.connect(self.go_home)
-        self.tool_bar.addAction(self.home_button)
+        self.toolbar.addAction(self.home_button)
 
         self.url_input = QLineEdit(self)
         self.url_input.returnPressed.connect(lambda: self.load_url())
-        self.tool_bar.addWidget(self.url_input)
+        self.toolbar.addWidget(self.url_input)
 
-        self.tool_bar.addSeparator()
+        self.toolbar.addSeparator()
 
+        # Bookmark Widget
         self.add_bookmark_action = QAction(QIcon('icon/add-bookmark.svg'), 'Add Bookmark', self)
         self.add_bookmark_action.triggered.connect(self.add_bookmark)
-        self.tool_bar.addAction(self.add_bookmark_action)
+        self.toolbar.addAction(self.add_bookmark_action)
 
         self.remove_bookmark_action = QAction(QIcon('icon/remove-bookmark.svg'), 'Remove Bookmark', self)
         self.remove_bookmark_action.triggered.connect(self.remove_bookmark)
-        self.tool_bar.addAction(self.remove_bookmark_action)
-
-        # Tab Widget
-        self.tabs = QTabWidget()
-        self.tabs.setTabsClosable(True)
-        self.tabs.tabCloseRequested.connect(self.close_tab)
-        self.setCentralWidget(self.tabs)
+        self.toolbar.addAction(self.remove_bookmark_action)
 
         # History List
         self.history_list = []
         self.create_tab()
         self.show()
 
-    # Create Tab
     def create_tab(self):
         """
         Function to create a new tab.
@@ -172,7 +168,7 @@ class PyWeb(QMainWindow):
         self.tab.titleChanged.connect(lambda title: self.tabs.setTabText(self.tabs.indexOf(self.tab), title))
         self.tab.loadStarted.connect(self.tab_load_started)
         self.tab.loadFinished.connect(self.tab_load_finished)
-        self.tabs.setCurrentWidget(self.tab)
+        self.tabs.addTab(self.tab, 'New Tab')
 
     def tab_load_started(self):
         """
@@ -190,15 +186,20 @@ class PyWeb(QMainWindow):
         :return: None
         :since: 1.0.0
         """
-        self.status_bar.showMessage('Page is ready')
-        url = self.tab.url().toString()
+        self.status_bar.showMessage('Page is Ready')
 
-        # UC # Add Favicon
+        # Add favicon to the tab
+        url = self.tab.url().toString()
+        if url.endswith('.ulkaa.com'):
+            self.tabs.setTabIcon(self.tabs.indexOf(self.tab), QIcon('image/Ulkaa-Logo.webp'))
+        else:
+            self.tabs.setTabIcon(self.tabs.indexOf(self.tab), self.tab.icon())
 
         # Update the Address Bar
         self.url_input.setText(url)
 
-        # Add Current URL to the History
+        # Add the Current URL to the History
+        url = self.tab.url().toString()
         if url not in self.history_list:
             self.history_list.append(url)
 
@@ -348,9 +349,9 @@ class PyWeb(QMainWindow):
         :since: 1.0.0
         """
         if checked:
-            self.tool_bar.show()
+            self.toolbar.show()
         else:
-            self.tool_bar.hide()
+            self.toolbar.hide()
 
 
 def exit_browser():
@@ -370,6 +371,6 @@ The main function to run the PyWeb Browser.
 :since: 1.0.0
 """
 if __name__ == '__main__':
-    app = QApplication([])
+    app = QApplication(sys.argv)
     window = PyWeb()
     app.exec()

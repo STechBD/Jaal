@@ -1,12 +1,12 @@
 """
-Package: PyWeb
+Package: Jaal
 Version: 1.0.0
-Description: PyWeb is a web browser made with Python and PyQt6.
+Description: Jaal is a web browser made with Python and PyQt6.
 Author: Md. Ashraful Alam Shemul
 Author GitHub: https://github.com/AAShemul
 Developer: S Technologies
 Developer URI: https://www.stechbd.net
-GitHub Repository: https://github.com/STechBD/PyWeb
+GitHub Repository: https://github.com/STechBD/Jaal
 Created: April 24, 2023
 Updated: May 14, 2024
 License: MIT
@@ -22,16 +22,16 @@ from PyQt6.QtWebEngineWidgets import QWebEngineView
 from PyQt6.QtWidgets import QApplication, QMainWindow, QLineEdit, QTabWidget, QMessageBox, QToolBar
 
 
-class PyWeb(QMainWindow):
+class Jaal(QMainWindow):
     """
-    The main class of the PyWeb Browser.
+    The main class of the Jaal Browser.
 
     :return: None
     :since: 1.0.0
     """
     def __init__(self):
         """
-        Constructor function to initialize the PyWeb Browser.
+        Constructor function to initialize the Jaal Browser.
 
         :return: None
         :since: 1.0.0
@@ -40,8 +40,8 @@ class PyWeb(QMainWindow):
 
         self.tab = None
         self.url_input = QLineEdit()
-        self.setWindowTitle('PyWeb Browser')
-        self.setWindowIcon(QIcon('image/PyWeb-Logo.webp'))
+        self.setWindowTitle('Jaal Browser')
+        self.setWindowIcon(QIcon('image/Jaal-Logo.webp'))
 
         # Tab Widget
         self.tabs = QTabWidget()
@@ -284,7 +284,7 @@ class PyWeb(QMainWindow):
         :return: None
         :since: 1.0.0
         """
-        QMessageBox.about(self, 'About PyWeb Browser', 'PyWeb is a desktop app for browsing websites.')
+        QMessageBox.about(self, 'About Jaal Browser', 'Jaal is a desktop app for browsing websites.')
 
     def back(self):
         """
@@ -365,12 +365,12 @@ def exit_browser():
 
 
 """
-The main function to run the PyWeb Browser.
+The main function to run the Jaal Browser.
 
 :return: None
 :since: 1.0.0
 """
 if __name__ == '__main__':
     app = QApplication(sys.argv)
-    window = PyWeb()
+    window = Jaal()
     app.exec()

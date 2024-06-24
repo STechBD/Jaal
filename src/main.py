@@ -1,17 +1,18 @@
 """
 Package: Jaal
 Version: 1.0.0
-Description: Jaal is a web browser made with Python and PyQt6.
+Description: Jaal is a lightweight and privacy-focused web browser.
 Author: Md. Ashraful Alam Shemul
 Author GitHub: https://github.com/AAShemul
 Developer: S Technologies
 Developer URI: https://www.stechbd.net
 GitHub Repository: https://github.com/STechBD/Jaal
+Homepage: https://www.stechbd.net/product/Jaal
 Created: April 24, 2023
-Updated: May 14, 2024
 License: MIT
 License URI: https://opensource.org/licenses/MIT
 """
+
 
 import sys
 from urllib.parse import urlparse

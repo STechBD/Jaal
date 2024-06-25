@@ -13,14 +13,16 @@ License: MIT
 License URI: https://opensource.org/licenses/MIT
 """
 
-
 import sys
 from urllib.parse import urlparse
 
-from PyQt6.QtCore import QUrl
+from PyQt6.QtCore import QUrl, pyqtSignal
 from PyQt6.QtGui import QAction, QIcon
 from PyQt6.QtWebEngineWidgets import QWebEngineView
 from PyQt6.QtWidgets import QApplication, QMainWindow, QLineEdit, QTabWidget, QMessageBox, QToolBar
+
+from bookmark_dialog import BookmarkDialog
+from lib.bookmark import Bookmark
 
 
 class Jaal(QMainWindow):
@@ -30,6 +32,8 @@ class Jaal(QMainWindow):
     :return: None
     :since: 1.0.0
     """
+    remove_bookmark_signal = pyqtSignal(str)
+
     def __init__(self):
         """
         Constructor function to initialize the Jaal Browser.
@@ -43,6 +47,8 @@ class Jaal(QMainWindow):
         self.url_input = QLineEdit()
         self.setWindowTitle('Jaal Browser')
         self.setWindowIcon(QIcon('image/Jaal-Logo.webp'))
+        self.bookmark_manager = Bookmark()
+        self.remove_bookmark_signal.connect(self.remove_bookmark_by_url)
 
         # Tab Widget
         self.tabs = QTabWidget()
@@ -152,6 +158,16 @@ class Jaal(QMainWindow):
         self.remove_bookmark_action.triggered.connect(self.remove_bookmark)
         self.toolbar.addAction(self.remove_bookmark_action)
 
+        # Check if the URL is bookmarked
+        if self.tab:
+            url = self.tab.url().toString()
+            if self.bookmark_manager.is_bookmarked(url):
+                self.add_bookmark_action.setEnabled(False)
+                self.remove_bookmark_action.setEnabled(True)
+            else:
+                self.add_bookmark_action.setEnabled(True)
+                self.remove_bookmark_action.setEnabled(False)
+
         # History List
         self.history_list = []
         self.create_tab()
@@ -211,10 +227,11 @@ class Jaal(QMainWindow):
         :return: None
         :since: 1.0.0
         """
-        # Display the Bookmark List in a Message Box
-        message_box = QMessageBox()
-        # UC # message_box.setText("\n".join(self.bookmark_list))
-        message_box.exec()
+        if self.tab:
+            url = self.tab.url().toString()
+            title = self.tab.title()
+            self.bookmark_manager.add_bookmark(url, title)
+            QMessageBox.information(self, 'Add Bookmark', 'Bookmark added successfully.')
 
     def remove_bookmark(self):
         """
@@ -223,10 +240,10 @@ class Jaal(QMainWindow):
         :return: None
         :since: 1.0.0
         """
-        # Display the Bookmark List in a Message Box
-        message_box = QMessageBox()
-        # UC # message_box.setText("\n".join(self.bookmark_list))
-        message_box.exec()
+        if self.tab:
+            url = self.tab.url().toString()
+            self.bookmark_manager.remove_bookmark(url)
+            QMessageBox.information(self, 'Remove Bookmark', 'Bookmark removed successfully.')
 
     def show_bookmarks(self):
         """
@@ -235,10 +252,35 @@ class Jaal(QMainWindow):
         :return: None
         :since: 1.0.0
         """
-        # Display the Bookmark List in a Message Box
-        message_box = QMessageBox()
-        # UC # message_box.setText("\n".join(self.bookmark_list))
-        message_box.exec()
+        bookmark_list = self.bookmark_manager.bookmarks
+        if not bookmark_list:
+            QMessageBox.information(self, 'Bookmarks', 'No bookmarks found.')
+        else:
+            dialog = BookmarkDialog(bookmark_list)
+            dialog.open_url_signal.connect(self.load_url_in_current_tab)
+            dialog.remove_bookmark_signal.connect(self.remove_bookmark_by_url)
+            dialog.exec()
+
+    def load_url_in_current_tab(self, url):
+        """
+        Function to load the URL in the current tab.
+
+        :param url: The URL to be loaded.
+        :return: None
+        :since: 1.0.0
+        """
+        self.tab.load(QUrl(url))
+
+    def remove_bookmark_by_url(self, url):
+        """
+        Function to remove a bookmark by URL.
+
+        :param url: The URL of the bookmark to be removed.
+        :return: None
+        :since: 1.0.0
+        """
+        self.bookmark_manager.remove_bookmark(url)
+        QMessageBox.information(self, 'Remove Bookmark', 'Bookmark removed successfully.')
 
     def show_settings(self):
         """

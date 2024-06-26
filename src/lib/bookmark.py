@@ -1,79 +1,93 @@
-import json
-import os
+import sqlite3
 
 
 class Bookmark:
-    def __init__(self, bookmarks_file='bookmarks.json'):
-        """
-        Constructor function to initialize the Bookmark manager.
+    def __init__(self, db_path='bookmarks.db'):
+        self.db_path = db_path
+        self.init_db()
 
-        :param bookmarks_file: The file where bookmarks will be stored.
-        :since: 1.0.0
-        """
-        self.bookmarks_file = bookmarks_file
-        self.bookmarks = self.load_bookmarks()
+    def init_db(self):
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
 
-    def load_bookmarks(self):
-        """
-        Load bookmarks from the bookmarks file.
+        # Create the bookmarks table
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS bookmarks (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                title TEXT NOT NULL,
+                url TEXT NOT NULL,
+                favicon BLOB,
+                folder_id INTEGER,
+                FOREIGN KEY (folder_id) REFERENCES folders(id)
+            )
+        ''')
 
-        :return: A list of bookmarks.
-        :since: 1.0.0
-        """
-        if os.path.exists(self.bookmarks_file):
-            with open(self.bookmarks_file, 'r') as file:
-                return json.load(file)
-        return []
+        # Create the folders table
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS folders (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name TEXT NOT NULL,
+                parent_id INTEGER,
+                FOREIGN KEY (parent_id) REFERENCES folders(id)
+            )
+        ''')
 
-    def save_bookmarks(self):
-        """
-        Save bookmarks to the bookmarks file.
+        conn.commit()
+        conn.close()
 
-        :return: None
-        :since: 1.0.0
-        """
-        with open(self.bookmarks_file, 'w') as file:
-            json.dump(self.bookmarks, file, indent=4)
+    def add_bookmark(self, title, url, favicon=None, folder_id=None):
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        cursor.execute('INSERT INTO bookmarks (title, url, favicon, folder_id) VALUES (?, ?, ?, ?)',
+                       (title, url, favicon, folder_id))
+        conn.commit()
+        conn.close()
 
-    def add_bookmark(self, url, title):
-        """
-        Add a bookmark.
+    def get_bookmarks(self, folder_id=None):
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        if folder_id:
+            cursor.execute('SELECT id, title, url, favicon, folder_id FROM bookmarks WHERE folder_id = ?', (folder_id,))
+        else:
+            cursor.execute('SELECT id, title, url, favicon, folder_id FROM bookmarks WHERE folder_id IS NULL')
+        bookmarks = cursor.fetchall()
+        conn.close()
+        return bookmarks
 
-        :param url: The URL of the bookmark.
-        :param title: The title of the bookmark.
-        :return: None
-        :since: 1.0.0
-        """
-        if not self.is_bookmarked(url):
-            self.bookmarks.append({'url': url, 'title': title})
-            self.save_bookmarks()
+    def remove_bookmark(self, bookmark_id):
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        cursor.execute('DELETE FROM bookmarks WHERE id = ?', (bookmark_id,))
+        conn.commit()
+        conn.close()
 
-    def remove_bookmark(self, url):
-        """
-        Remove a bookmark.
+    def add_folder(self, name, parent_id=None):
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        cursor.execute('INSERT INTO folders (name, parent_id) VALUES (?, ?)', (name, parent_id))
+        conn.commit()
+        conn.close()
 
-        :param url: The URL of the bookmark to remove.
-        :return: None
-        :since: 1.0.0
-        """
-        self.bookmarks = [b for b in self.bookmarks if b['url'] != url]
-        self.save_bookmarks()
+    def get_folders(self, parent_id=None):
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        if parent_id:
+            cursor.execute('SELECT id, name, parent_id FROM folders WHERE parent_id = ?', (parent_id,))
+        else:
+            cursor.execute('SELECT id, name, parent_id FROM folders WHERE parent_id IS NULL')
+        folders = cursor.fetchall()
+        conn.close()
+        return folders
 
-    def is_bookmarked(self, url):
-        """
-        Check if a URL is already bookmarked.
+    def remove_folder(self, folder_id):
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
 
-        :param url: The URL to check.
-        :return: True if the URL is bookmarked, False otherwise.
-        :since: 1.0.0
-        """
-        return any(b['url'] == url for b in self.bookmarks)
+        # Remove all bookmarks in the folder
+        cursor.execute('DELETE FROM bookmarks WHERE folder_id = ?', (folder_id,))
 
-    def get_bookmarks(self):
-        """
-        Get the list of bookmarks.
+        # Remove the folder itself
+        cursor.execute('DELETE FROM folders WHERE id = ?', (folder_id,))
 
-        :return: A list of bookmarks.
-        :since: 1.0.0
-        """
-        return self.bookmarks
+        conn.commit()
+        conn.close()

@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bookmark Manager</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+</head>
+<body class="bg-gray-100 h-screen">
+    <div class="flex h-full">
+        <!-- Sidebar -->
+        <div class="w-64 bg-white p-4 border-r">
+            <h2 class="text-lg font-bold mb-4">Folders</h2>
+            <ul id="folder-list" class="space-y-2">
+                <!-- Folder items will be populated here -->
+            </ul>
+        </div>
+        <!-- Main Content -->
+        <div class="flex-1 p-4">
+            <h2 class="text-lg font-bold mb-4">Bookmarks</h2>
+            <ul id="bookmark-list" class="space-y-2">
+                <!-- Bookmark items will be populated here -->
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            loadFolders();
+        });
+
+        function loadFolders(parentId = null) {
+            axios.get(`http://localhost:5000/get_folders?parent_id=${parentId}`).then(response => {
+                const folderList = document.getElementById('folder-list');
+                folderList.innerHTML = '';
+                response.data.forEach(folder => {
+                    const li = document.createElement('li');
+                    li.textContent = folder.name;
+                    li.className = 'cursor-pointer hover:bg-gray-200 p-2 rounded';
+                    li.onclick = () => loadBookmarks(folder.id);
+                    folderList.appendChild(li);
+                });
+            });
+        }
+
+        function loadBookmarks(folderId) {
+            axios.get(`http://localhost:5000/get_bookmarks?folder_id=${folderId}`).then(response => {
+                const bookmarkList = document.getElementById('bookmark-list');
+                bookmarkList.innerHTML = '';
+                response.data.forEach(bookmark => {
+                    const li = document.createElement('li');
+                    li.innerHTML = `<img src="data:image/png;base64,${bookmark.favicon}" class="inline-block w-6 h-6 mr-2"/> ${bookmark.title} - <a href="${bookmark.url}" target="_blank" class="text-blue-500">${bookmark.url}</a>`;
+                    li.className = 'p-2 rounded hover:bg-gray-200';
+                    bookmarkList.appendChild(li);
+                });
+            });
+        }
+    </script>
+</body>
+</html>

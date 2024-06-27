@@ -12,17 +12,23 @@ Created: April 24, 2023
 License: MIT
 License URI: https://opensource.org/licenses/MIT
 """
-
 import sys
+import os
 import threading
+import requests
+from datetime import datetime
+from urllib.parse import urlparse
 
 from PyQt6.QtCore import QUrl, pyqtSignal
 from PyQt6.QtGui import QAction, QIcon
 from PyQt6.QtWebEngineWidgets import QWebEngineView
 from PyQt6.QtWidgets import QApplication, QMainWindow, QLineEdit, QTabWidget, QMessageBox, QToolBar
-from server.main import app as flask_app
 
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
+from server.app import app as flask_app
 from lib.bookmark import Bookmark
+from lib.history import History
 
 
 class Jaal(QMainWindow):
@@ -32,7 +38,6 @@ class Jaal(QMainWindow):
     :return: None
     :since: 1.0.0
     """
-    remove_bookmark_signal = pyqtSignal(str)
 
     def __init__(self):
         """
@@ -48,7 +53,7 @@ class Jaal(QMainWindow):
         self.setWindowTitle('Jaal Browser')
         self.setWindowIcon(QIcon('image/Jaal-Logo.webp'))
         self.bookmark_manager = Bookmark()
-        self.remove_bookmark_signal.connect(self.remove_bookmark_by_url)
+        self.history_manager = History()
 
         # Tab Widget
         self.tabs = QTabWidget()
@@ -167,21 +172,24 @@ class Jaal(QMainWindow):
     def create_tab(self, url='https://www.stechbd.net'):
         self.tab = QWebEngineView()
 
+        # Ensure url is a string
+        if not isinstance(url, str):
+            url = 'https://www.stechbd.net'
+
         if url.startswith('jaal://'):
-            # Custom URL handling
             if url == 'jaal://bookmark':
                 url = 'http://localhost:5000/bookmark'
             elif url == 'jaal://history':
                 url = 'http://localhost:5000/history'
             elif url == 'jaal://setting':
-                url = 'http://localhost:5000/settings'
+                url = 'http://localhost:5000/setting'
 
         self.tab.load(QUrl(url))
         self.tab.titleChanged.connect(lambda title: self.tabs.setTabText(self.tabs.indexOf(self.tab), title))
         self.tab.loadStarted.connect(self.tab_load_started)
         self.tab.loadFinished.connect(self.tab_load_finished)
         self.tabs.addTab(self.tab, 'New Tab')
-        self.tabs.setCurrentWidget(self.tab)  # Switch to the new tab automatically
+        self.tabs.setCurrentWidget(self.tab)
 
     def show_bookmark_manager(self):
         self.create_tab(url='jaal://bookmark')
@@ -206,14 +214,16 @@ class Jaal(QMainWindow):
 
         # Add favicon to the tab
         url = self.tab.url().toString()
+        domain = urlparse(url).netloc
         self.tabs.setTabIcon(self.tabs.indexOf(self.tab), self.tab.icon())
 
         # Update the Address Bar
         self.url_input.setText(url)
 
         # Add the Current URL to the History
-        if url not in self.history_list:
-            self.history_list.append(url)
+        if not self.history_manager.is_in_history(url):
+            icon_path = self.tab.icon().pixmap(16, 16).toImage().save(domain + '.ico', 'ICO')
+            self.add_history_entry(self.tab.title(), url, datetime.now().strftime('%Y-%m-%d %H:%M:%S'), icon_path)
 
         # Update bookmark actions based on whether the URL is bookmarked
         if self.bookmark_manager.is_bookmarked(url):
@@ -253,13 +263,37 @@ class Jaal(QMainWindow):
             self.remove_bookmark_action.setEnabled(False)
 
     def show_history(self):
-        """
-        Function to show the history.
-
-        :return: None
-        :since: 1.0.0
-        """
         self.create_tab(url='jaal://history')
+
+    def add_history_entry(self, title, url, time, favicon):
+        """
+        Function to add a history entry.
+
+        :param title: Title of the page.
+        :param url: URL of the page.
+        :param time: Time when the page was visited.
+        :param favicon: Favicon of the page.
+        :return: None
+        """
+        data = {
+            'title': title,
+            'url': url,
+            'time': time,
+            'favicon': favicon
+        }
+        requests.post('http://localhost:5000/add_history', json=data)
+
+    def remove_history_entry(self, history_id):
+        """
+        Function to remove a history entry.
+
+        :param history_id: ID of the history entry to be removed.
+        :return: None
+        """
+        data = {
+            'id': history_id
+        }
+        requests.post('http://localhost:5000/remove_history', json=data)
 
     def show_settings(self):
         """

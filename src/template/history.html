@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>History</title>
+	<script src="https://cdn.tailwindcss.com"></script>
+	<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+</head>
+<body class="bg-gray-100 h-screen">
+<div class="flex h-full">
+	<!-- Main Content -->
+	<div class="flex-1 p-4">
+		<h2 class="text-lg font-bold mb-4">History</h2>
+		<ul id="history-list" class="space-y-2">
+			<!-- History items will be populated here -->
+		</ul>
+	</div>
+</div>
+
+<script>
+	document.addEventListener('DOMContentLoaded', () => {
+		loadHistory();
+	});
+
+	function loadHistory() {
+		axios.get(`http://localhost:5000/get_history`).then(response => {
+			const historyList = document.getElementById('history-list');
+			historyList.innerHTML = '';
+			response.data.forEach(entry => {
+				const li = document.createElement('li');
+				li.innerHTML = `${entry.title} - <a href="${entry.url}" target="_blank" class="text-blue-500">${entry.url}</a> (Visited at ${entry.time})`;
+				li.className = 'p-2 rounded hover:bg-gray-200';
+				historyList.appendChild(li);
+			});
+		});
+	}
+</script>
+</body>
+</html>

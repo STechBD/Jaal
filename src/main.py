@@ -16,6 +16,7 @@ import sys
 import os
 import threading
 import requests
+import ctypes
 from datetime import datetime
 from urllib.parse import urlparse
 
@@ -51,7 +52,7 @@ class Jaal(QMainWindow):
         self.tab = None
         self.url_input = QLineEdit()
         self.setWindowTitle('Jaal Browser')
-        self.setWindowIcon(QIcon('image/Jaal-Logo.webp'))
+        self.setWindowIcon(QIcon('image/Jaal-Logo-Round.svg'))
         self.bookmark_manager = Bookmark()
         self.history_manager = History()
 
@@ -132,19 +133,19 @@ class Jaal(QMainWindow):
         self.toolbar = QToolBar()
         self.addToolBar(self.toolbar)
 
-        self.back_button = QAction(QIcon('icon/back.svg'), 'Back', self)
+        self.back_button = QAction(QIcon('image/back.svg'), 'Back', self)
         self.back_button.triggered.connect(self.back)
         self.toolbar.addAction(self.back_button)
 
-        self.forward_button = QAction(QIcon('icon/forward.svg'), 'Forward', self)
+        self.forward_button = QAction(QIcon('image/forward.svg'), 'Forward', self)
         self.forward_button.triggered.connect(self.forward)
         self.toolbar.addAction(self.forward_button)
 
-        self.reload_button = QAction(QIcon('icon/reload.svg'), 'Reload', self)
+        self.reload_button = QAction(QIcon('image/reload.svg'), 'Reload', self)
         self.reload_button.triggered.connect(self.reload)
         self.toolbar.addAction(self.reload_button)
 
-        self.home_button = QAction(QIcon('icon/home.svg'), 'Home', self)
+        self.home_button = QAction(QIcon('image/home.svg'), 'Home', self)
         self.home_button.triggered.connect(self.go_home)
         self.toolbar.addAction(self.home_button)
 
@@ -155,16 +156,17 @@ class Jaal(QMainWindow):
         self.toolbar.addSeparator()
 
         # Bookmark Widget
-        self.add_bookmark_action = QAction(QIcon('icon/add-bookmark.svg'), 'Add Bookmark', self)
+        self.add_bookmark_action = QAction(QIcon('image/add-bookmark.svg'), 'Add Bookmark', self)
         self.add_bookmark_action.triggered.connect(self.add_bookmark)
         self.toolbar.addAction(self.add_bookmark_action)
 
-        self.remove_bookmark_action = QAction(QIcon('icon/remove-bookmark.svg'), 'Remove Bookmark', self)
+        self.remove_bookmark_action = QAction(QIcon('image/remove-bookmark.svg'), 'Remove Bookmark', self)
         self.remove_bookmark_action.triggered.connect(self.remove_bookmark)
         self.toolbar.addAction(self.remove_bookmark_action)
 
         self.create_tab()
         self.show()
+        self.showMaximized()
 
         # Start the Flask server in a separate thread
         self.start_flask_server()
@@ -410,5 +412,14 @@ class Jaal(QMainWindow):
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
+
+    # Set the app user model ID for Windows
+    if os.name == 'nt':  # Check if the OS is Windows
+        myappid = 'yourcompanyname.jaal.browser'  # Arbitrary string (choose something unique)
+        ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
+
+    app.setWindowIcon(QIcon('image/Jaal-Logo-Round.ico'))  # Use the .ico file for Windows taskbar
     window = Jaal()
+    window.setWindowIcon(QIcon('image/Jaal-Logo-Round.ico'))  # Set for the window as well
+
     sys.exit(app.exec())

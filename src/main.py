@@ -171,20 +171,16 @@ class Jaal(QMainWindow):
         # Start the Flask server in a separate thread
         self.start_flask_server()
 
-    def create_tab(self, url='https://www.stechbd.net'):
+    def create_tab(self, url='jaal://home'):
         self.tab = QWebEngineView()
 
         # Ensure url is a string
         if not isinstance(url, str):
-            url = 'https://www.stechbd.net'
+            url = 'jaal://home'
 
+        # Handle custom jaal:// URLs
         if url.startswith('jaal://'):
-            if url == 'jaal://bookmark':
-                url = 'http://localhost:5000/bookmark'
-            elif url == 'jaal://history':
-                url = 'http://localhost:5000/history'
-            elif url == 'jaal://setting':
-                url = 'http://localhost:5000/setting'
+            url = self.handle_jaal_url(url)
 
         self.tab.load(QUrl(url))
         self.tab.titleChanged.connect(lambda title: self.tabs.setTabText(self.tabs.indexOf(self.tab), title))
@@ -192,6 +188,20 @@ class Jaal(QMainWindow):
         self.tab.loadFinished.connect(self.tab_load_finished)
         self.tabs.addTab(self.tab, 'New Tab')
         self.tabs.setCurrentWidget(self.tab)
+
+    def handle_jaal_url(self, url):
+        if url == 'jaal://home':
+            return 'http://localhost:5000/'
+        elif url == 'jaal://about':
+            return 'http://localhost:5000/about'
+        elif url == 'jaal://bookmark':
+            return 'http://localhost:5000/bookmark'
+        elif url == 'jaal://history':
+            return 'http://localhost:5000/history'
+        elif url == 'jaal://setting':
+            return 'http://localhost:5000/setting'
+        else:
+            return 'http://localhost:5000/'
 
     def show_bookmark_manager(self):
         self.create_tab(url='jaal://bookmark')
@@ -220,6 +230,8 @@ class Jaal(QMainWindow):
         self.tabs.setTabIcon(self.tabs.indexOf(self.tab), self.tab.icon())
 
         # Update the Address Bar
+        if url.startswith('http://localhost:5000/'):
+            url = url.replace('http://localhost:5000/', 'jaal://')
         self.url_input.setText(url)
 
         # Add the Current URL to the History
@@ -316,6 +328,10 @@ class Jaal(QMainWindow):
         """
         self.tabs.removeTab(index)
 
+        # Close the browser if there are no tabs left
+        if self.tabs.count() == 0:
+            self.exit_browser()
+
     def go_home(self):
         """
         Function to go to the home page.
@@ -333,6 +349,15 @@ class Jaal(QMainWindow):
         :since: 1.0.0
         """
         url = self.url_input.text()
+
+        if url.startswith('jaal://'):
+            # Handle jaal:// URLs
+            url = self.handle_jaal_url(url)
+        elif (' ' or '@') in url:
+            url = 'https://www.google.com/search?q=' + '+'.join(url.split(' '))
+        elif not url.startswith('http://') and not url.startswith('https://'):
+            url = 'http://' + url
+
         self.tab.setUrl(QUrl(url))
 
     def back(self):
@@ -387,7 +412,7 @@ class Jaal(QMainWindow):
         :return: None
         :since: 1.0.0
         """
-        QMessageBox.information(self, 'About', 'Jaal Browser Version 1.0.0\nCreated by S Technologies')
+        self.create_tab(url='jaal://about')
 
     def exit_browser(self):
         """
@@ -415,11 +440,10 @@ if __name__ == '__main__':
 
     # Set the app user model ID for Windows
     if os.name == 'nt':  # Check if the OS is Windows
-        myappid = 'yourcompanyname.jaal.browser'  # Arbitrary string (choose something unique)
+        myappid = 'net.stechbd.jaal'
         ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
 
-    app.setWindowIcon(QIcon('image/Jaal-Logo-Round.ico'))  # Use the .ico file for Windows taskbar
-    window = Jaal()
-    window.setWindowIcon(QIcon('image/Jaal-Logo-Round.ico'))  # Set for the window as well
+    app.setWindowIcon(QIcon('image/Jaal-Logo-Round.ico'))
+    Jaal()
 
     sys.exit(app.exec())

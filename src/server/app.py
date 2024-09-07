@@ -20,6 +20,10 @@ history_manager = History()
 def index():
     return 'Welcome to Jaal'
 
+@app.route('/about', methods=['GET'])
+def about():
+    return 'Jaal is a web browser developed by S Technologies.<br/>Version: 1.0.0'
+
 
 @app.route('/get_folders', methods=['GET'])
 def get_folders():

@@ -11,18 +11,64 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '.
 from src.lib.bookmark import Bookmark
 from src.lib.history import History
 
+
 app = Flask(__name__)
 bookmark_manager = Bookmark()
 history_manager = History()
+app.static_folder = os.path.join(os.path.dirname(__file__), 'static')
 
 
 @app.route('/', methods=['GET'])
 def index():
-    return 'Welcome to Jaal'
+    return app.send_static_file('index.html')
+
+
+@app.route('/img')
+def img_dir():
+    return 'Image not found'
+
+
+@app.route('/img/<string:file>')
+def img(file):
+    return app.send_static_file('img/' + file)
+
+
+@app.route('/js')
+def js_dir():
+    return 'JS not found'
+
+
+@app.route('/js/<string:file>')
+def js(file):
+    return app.send_static_file('js/' + file)
+
+
+@app.route('/css')
+def css_dir():
+    return 'CSS not found'
+
+
+@app.route('/css/<string:file>')
+def css(file):
+    return app.send_static_file('css/' + file)
+
 
 @app.route('/about', methods=['GET'])
 def about():
     return 'Jaal is a web browser developed by S Technologies.<br/>Version: 1.0.0'
+
+
+@app.route('/bookmark', methods=['GET'])
+def bookmark():
+    data = bookmark_manager.get_bookmark()
+    html = '<table border="1"><tr><th>ID</th><th>Title</th><th>URL</th><th>Favicon</th><th>Folder ID</th></tr>'
+    for row in data:
+        html += '<tr>'
+        for col in row:
+            html += '<td>' + str(col) + '</td>'
+        html += '</tr>'
+    html += '</table>'
+    return html
 
 
 @app.route('/get_folders', methods=['GET'])

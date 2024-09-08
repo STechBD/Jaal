@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>New Tab</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="js/tailwindcss-3.4.5.js"></script>
+    <link rel="stylesheet" href="css/main.css">
+</head>
+<body class="text-gray-900 h-screen flex items-center justify-center">
+
+<!-- Main container -->
+<div class="max-w-7xl m-auto p-4 bg-gray-100 bg-opacity-40 rounded-xl">
+    <!-- Header -->
+    <header class="flex items-center justify-between mb-6">
+        <h1 class="text-3xl font-bold text-black">Ulkaa Start</h1>
+        <div id="time" class="text-3xl font-bold">
+            Loading...
+        </div>
+        <div class="flex space-x-4">
+            <a class="bg-blue-500 text-white px-4 py-2 rounded" href="https://www.ulkaa.com/login" target="_blank">
+                Sign In
+            </a>
+            <a class="bg-gray-200 text-black px-4 py-2 rounded" href="https://www.ulkaa.com/register" target="_blank">
+                Register
+            </a>
+        </div>
+    </header>
+
+    <!-- URL and searchbar -->
+    <div class="bg-white shadow-lg rounded-lg p-4 my-8 flex items-center space-x-4">
+        <div class="">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-search" viewBox="0 0 16 16">
+                <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001q.044.06.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1 1 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0"/>
+            </svg>
+        </div>
+        <input type="text" class="flex-1 bg-transparent focus:outline-none" placeholder="Search or type URL">
+    </div>
+
+    <!-- Widgets grid -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <!-- Weather widget -->
+        <div id="weather-widget" class="bg-white shadow-lg rounded-lg p-6">
+            <h2 class="text-xl font-semibold mb-4">Weather</h2>
+            <div class="flex items-center justify-between">
+                <div>
+                    <p id="weather-temp" class="text-5xl font-bold">--</p>
+                    <p id="weather-desc" class="text-sm text-gray-500">Loading...</p>
+                </div>
+                <div class="loading w-16 h-16 border-t-4 border-blue-500 rounded-full"></div>
+            </div>
+            <p id="weather-location" class="text-sm mt-2">Dhaka, Bangladesh</p>
+        </div>
+
+        <!-- Task manager widget -->
+        <div class="bg-white shadow-lg rounded-lg p-6">
+            <h2 class="text-xl font-semibold mb-4">Tasks</h2>
+            <ul id="tasks-list">
+                <li class="flex justify-between items-center py-2 border-b">
+                    <span>Complete Assignment</span>
+                    <input type="checkbox">
+                </li>
+                <li class="flex justify-between items-center py-2 border-b">
+                    <span>Read Research Paper</span>
+                    <input type="checkbox">
+                </li>
+                <li class="flex justify-between items-center py-2">
+                    <span>Project Meeting</span>
+                    <input type="checkbox">
+                </li>
+            </ul>
+        </div>
+
+        <!-- Currency widget -->
+        <div id="currency-widget" class="bg-white shadow-lg rounded-lg p-6">
+            <h2 class="text-xl font-semibold mb-4">Currency Exchange (USD-BDT)</h2>
+            <div id="currency-rate" class="text-3xl font-bold">--</div>
+            <p class="text-sm text-gray-500">Exchange rate</p>
+        </div>
+
+        <!-- News widget -->
+        <div id="news-widget" class="bg-white shadow-lg rounded-lg p-6 col-span-1 md:col-span-2">
+            <h2 class="text-xl font-semibold mb-4">Latest News</h2>
+            <ul id="news-list" class="text-gray-500">Loading news...</ul>
+        </div>
+
+        <!-- Calendar widget -->
+        <div class="bg-white shadow-lg rounded-lg p-6">
+            <h2 class="text-xl font-semibold mb-4">Calendar</h2>
+            <div id="calendar" class="text-gray-500">Loading calendar...</div>
+        </div>
+
+    </div>
+</div>
+<script src="js/main.js"></script>
+</body>
+</html>

@@ -61,6 +61,7 @@ class Jaal(QMainWindow):
         self.tabs.setTabsClosable(True)
         self.tabs.tabCloseRequested.connect(self.close_tab)
         self.setCentralWidget(self.tabs)
+        self.tabs.currentChanged.connect(lambda index: self.url_input.setText(self.tabs.widget(index).url().toString().replace('http://localhost:5000/', 'jaal://') if self.tabs.widget(index).url().toString().startswith('http://localhost:5000/') else self.tabs.widget(index).url().toString()))
 
         # Menu Bar
         self.menu_bar = self.menuBar()
@@ -164,6 +165,7 @@ class Jaal(QMainWindow):
         self.remove_bookmark_action.triggered.connect(self.remove_bookmark)
         self.toolbar.addAction(self.remove_bookmark_action)
 
+        # Start the browser
         self.create_tab()
         self.show()
         self.showMaximized()
@@ -351,7 +353,6 @@ class Jaal(QMainWindow):
         url = self.url_input.text()
 
         if url.startswith('jaal://'):
-            # Handle jaal:// URLs
             url = self.handle_jaal_url(url)
         elif (' ' or '@') in url:
             url = 'https://www.google.com/search?q=' + '+'.join(url.split(' '))

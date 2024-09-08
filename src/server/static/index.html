@@ -38,7 +38,7 @@
     </div>
 
     <!-- Widgets grid -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
         <!-- Weather widget -->
         <div id="weather-widget" class="bg-white shadow-lg rounded-lg p-6">
             <h2 class="text-xl font-semibold mb-4">Weather</h2>
@@ -77,6 +77,15 @@
             <div id="currency-rate" class="text-3xl font-bold">--</div>
             <p class="text-sm text-gray-500">Exchange rate</p>
         </div>
+
+        <!-- Analog Clock widget -->
+        <div class="bg-white shadow-lg rounded-lg p-6 overflow-hidden">
+            <h2 class="text-xl font-semibold mb-4">Analog Clock</h2>
+            <div class="w-32 h-32 bg-white border-2 border-gray-200 rounded-full mx-auto">
+                <canvas id="clock-widget" width="128" height="128"></canvas>
+            </div>
+        </div>
+
 
         <!-- News widget -->
         <div id="news-widget" class="bg-white shadow-lg rounded-lg p-6 col-span-1 md:col-span-2">

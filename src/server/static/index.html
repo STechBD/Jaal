@@ -10,7 +10,7 @@
 <body class="text-gray-900 h-screen flex items-center justify-center">
 
 <!-- Main container -->
-<div class="max-w-7xl m-auto p-4 bg-gray-100 bg-opacity-40 rounded-xl">
+<div class="max-w-7xl mx-auto my-24 p-4 bg-gray-100 bg-opacity-40 rounded-xl">
     <!-- Header -->
     <header class="flex items-center justify-between mb-6">
         <h1 class="text-3xl font-bold text-black">Ulkaa Start</h1>
@@ -34,22 +34,28 @@
                 <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001q.044.06.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1 1 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0"/>
             </svg>
         </div>
-        <input type="text" class="flex-1 bg-transparent focus:outline-none" placeholder="Search or type URL">
+        <input id="search-widget" type="text" class="flex-1 bg-transparent focus:outline-none" placeholder="Search or type URL">
     </div>
 
     <!-- Widgets grid -->
     <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
         <!-- Weather widget -->
-        <div id="weather-widget" class="bg-white shadow-lg rounded-lg p-6">
+        <div id="weather-widget" class="bg-white shadow-lg rounded-lg p-6 col-span-2">
             <h2 class="text-xl font-semibold mb-4">Weather</h2>
-            <div class="flex items-center justify-between">
+            <div id="weatherapi-weather-widget-3"></div>
+            <div class="flex items-center justify-between hidden">
                 <div>
                     <p id="weather-temp" class="text-5xl font-bold">--</p>
                     <p id="weather-desc" class="text-sm text-gray-500">Loading...</p>
                 </div>
                 <div class="loading w-16 h-16 border-t-4 border-blue-500 rounded-full"></div>
             </div>
-            <p id="weather-location" class="text-sm mt-2">Dhaka, Bangladesh</p>
+            <p id="weather-location" class="text-sm mt-2 hidden">Dhaka, Bangladesh</p>
+        </div>
+
+        <div class="bg-white shadow-lg rounded-lg p-6 md:col-span-2 flex flex-col h-full w-full">
+                <h2 class="text-xl font-semibold mb-4"><label for="note">Note</label></h2>
+                <textarea id="note" class="w-full h-max bg-gray-100 p-2 rounded grow" placeholder="Write anything here..."></textarea>
         </div>
 
         <!-- Task manager widget -->
@@ -86,21 +92,20 @@
             </div>
         </div>
 
-
-        <!-- News widget -->
-        <div id="news-widget" class="bg-white shadow-lg rounded-lg p-6 col-span-1 md:col-span-2">
-            <h2 class="text-xl font-semibold mb-4">Latest News</h2>
-            <ul id="news-list" class="text-gray-500">Loading news...</ul>
-        </div>
-
         <!-- Calendar widget -->
         <div class="bg-white shadow-lg rounded-lg p-6">
             <h2 class="text-xl font-semibold mb-4">Calendar</h2>
             <div id="calendar" class="text-gray-500">Loading calendar...</div>
         </div>
 
+        <!-- News widget -->
+        <div id="news-widget" class="bg-white shadow-lg rounded-lg p-6 col-span-2 md:col-span-4">
+            <h2 class="text-xl font-semibold mb-4">Latest News</h2>
+            <ul id="news-list" class="text-gray-500 grid grid-cols-2 md:grid-cols-3">Loading news...</ul>
+        </div>
     </div>
 </div>
 <script src="js/main.js"></script>
+<script type='text/javascript' src='https://www.weatherapi.com/weather/widget.ashx?loc=174248&wid=3&tu=1&div=weatherapi-weather-widget-3' async></script>
 </body>
 </html>

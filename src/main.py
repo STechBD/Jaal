@@ -62,6 +62,8 @@ class Jaal(QMainWindow):
         self.tabs.tabCloseRequested.connect(self.close_tab)
         self.setCentralWidget(self.tabs)
         self.tabs.currentChanged.connect(lambda index: self.url_input.setText(self.tabs.widget(index).url().toString().replace('http://localhost:5000/', 'jaal://') if self.tabs.widget(index).url().toString().startswith('http://localhost:5000/') else self.tabs.widget(index).url().toString()))
+        self.tabs.open_in_new_tab = pyqtSignal(str)
+        self.tabs.open_in_new_tab.connect(self.handle_open_in_new_tab)
 
         # Menu Bar
         self.menu_bar = self.menuBar()
@@ -190,6 +192,9 @@ class Jaal(QMainWindow):
         self.tab.loadFinished.connect(self.tab_load_finished)
         self.tabs.addTab(self.tab, 'New Tab')
         self.tabs.setCurrentWidget(self.tab)
+
+    def handle_open_in_new_tab(self, url):
+        self.create_tab(url)
 
     def handle_jaal_url(self, url):
         if url == 'jaal://home':

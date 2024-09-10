@@ -12,17 +12,19 @@ Created: April 24, 2023
 License: MIT
 License URI: https://opensource.org/licenses/MIT
 """
+import random
 import sys
 import os
 import threading
 import requests
 import ctypes
-from datetime import datetime
+from datetime import datetime, timedelta
 from urllib.parse import urlparse
 
 from PyQt6.QtCore import QUrl, pyqtSignal
 from PyQt6.QtGui import QAction, QIcon
 from PyQt6.QtWebEngineWidgets import QWebEngineView
+from PyQt6.QtWebEngineCore import QWebEnginePage
 from PyQt6.QtWidgets import QApplication, QMainWindow, QLineEdit, QTabWidget, QMessageBox, QToolBar
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
@@ -62,8 +64,6 @@ class Jaal(QMainWindow):
         self.tabs.tabCloseRequested.connect(self.close_tab)
         self.setCentralWidget(self.tabs)
         self.tabs.currentChanged.connect(lambda index: self.url_input.setText(self.tabs.widget(index).url().toString().replace('http://localhost:5000/', 'jaal://') if self.tabs.widget(index).url().toString().startswith('http://localhost:5000/') else self.tabs.widget(index).url().toString()))
-        self.tabs.open_in_new_tab = pyqtSignal(str)
-        self.tabs.open_in_new_tab.connect(self.handle_open_in_new_tab)
 
         # Menu Bar
         self.menu_bar = self.menuBar()
@@ -178,6 +178,14 @@ class Jaal(QMainWindow):
     def create_tab(self, url='jaal://home'):
         self.tab = QWebEngineView()
 
+        # Custom web page to handle opening links in new tabs
+        page = QWebEnginePage(self.tab)
+
+        # Override `createWindow` to handle requests for new tabs
+        page.createWindow = self.handle_create_new_tab
+
+        self.tab.setPage(page)
+
         # Ensure url is a string
         if not isinstance(url, str):
             url = 'jaal://home'
@@ -193,18 +201,38 @@ class Jaal(QMainWindow):
         self.tabs.addTab(self.tab, 'New Tab')
         self.tabs.setCurrentWidget(self.tab)
 
-    def handle_open_in_new_tab(self, url):
-        self.create_tab(url)
+    def handle_create_new_tab(self, _):
+        new_tab = QWebEngineView()
+        new_tab.setPage(QWebEnginePage())
 
-    def handle_jaal_url(self, url):
+        # Create a new tab for the request
+        self.tabs.addTab(new_tab, 'New Tab')
+        self.tabs.setCurrentWidget(new_tab)
+
+        return new_tab.page()
+
+    @staticmethod
+    def handle_jaal_url(url):
         if url == 'jaal://home':
             return 'http://localhost:5000/'
         elif url == 'jaal://about':
             return 'http://localhost:5000/about'
         elif url == 'jaal://bookmark':
             return 'http://localhost:5000/bookmark'
+        elif url == 'jaal://get_bookmark':
+            return 'http://localhost:5000/get_bookmark'
+        elif url == 'jaal://add_bookmark':
+            return 'http://localhost:5000/add_bookmark'
+        elif url == 'jaal://remove_bookmark':
+            return 'http://localhost:5000/remove_bookmark'
         elif url == 'jaal://history':
             return 'http://localhost:5000/history'
+        elif url == 'jaal://get_history':
+            return 'http://localhost:5000/get_history'
+        elif url == 'jaal://add_history':
+            return 'http://localhost:5000/add_history'
+        elif url == 'jaal://remove_history':
+            return 'http://localhost:5000/remove_history'
         elif url == 'jaal://setting':
             return 'http://localhost:5000/setting'
         else:
@@ -242,7 +270,7 @@ class Jaal(QMainWindow):
         self.url_input.setText(url)
 
         # Add the Current URL to the History
-        if not self.history_manager.is_in_history(url):
+        if not self.history_manager.is_in_history(url) and not url.startswith('jaal://') and not url.startswith('http://localhost:5000/'):
             icon_path = self.tab.icon().pixmap(16, 16).toImage().save(domain + '.ico', 'ICO')
             self.add_history_entry(self.tab.title(), url, datetime.now().strftime('%Y-%m-%d %H:%M:%S'), icon_path)
 

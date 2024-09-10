@@ -1,5 +1,7 @@
 import os
+import random
 import sqlite3
+from datetime import datetime, timedelta
 
 
 class History:
@@ -30,8 +32,10 @@ class History:
     def add_history_entry(self, title, url, time, favicon):
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
-        cursor.execute('INSERT INTO history (title, url, time, favicon) VALUES (?, ?, ?, ?)',
-                       (title, url, time, favicon))
+        cursor.execute(
+            'INSERT INTO history (title, url, time, favicon) VALUES (?, ?, ?, ?)',
+            (title, url, time, favicon)
+        )
         conn.commit()
         conn.close()
 

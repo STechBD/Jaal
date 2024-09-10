@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>History</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        ::-webkit-scrollbar-thumb {
+            background-color: #c1c1c1;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body class="bg-gray-100">
+
+    <!-- Header -->
+    <header class="bg-white shadow-md sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto p-4 flex items-center justify-between">
+            <h1 class="text-2xl font-semibold text-gray-700">History</h1>
+            <div class="flex">
+                <input type="text" placeholder="Search history" class="border border-gray-300 rounded-md px-4 py-2 w-80 focus:outline-none focus:ring focus:ring-blue-300" />
+                <button class="ml-2 px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 focus:outline-none">Search</button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto mt-6">
+        <!-- Date Filter Section -->
+        <section class="bg-white p-4 shadow-md rounded-md mb-6">
+            <div class="flex items-center justify-between">
+                <h2 class="text-xl font-semibold text-gray-700">History</h2>
+                <button class="text-blue-500 hover:underline" onclick="clearHistory()">Clear browsing data</button>
+            </div>
+        </section>
+
+        <!-- History Sections -->
+        <section id="history-list" class="bg-white p-4 shadow-md rounded-md mb-6">
+            <!-- Sections will be populated dynamically -->
+        </section>
+    </main>
+
+    <script>
+        // Function to load history from "http://localhost:5000/get_history"
+        async function loadHistory() {
+            try {
+                const response = await fetch('http://localhost:5000/get_history');
+                const historyData = await response.json();
+                categorizeHistory(historyData);
+            } catch (error) {
+                console.error('Error loading history:', error);
+            }
+        }
+
+        // Function to categorize and display history
+        function categorizeHistory(historyData) {
+            const now = new Date();
+            const sections = {
+                today: [],
+                yesterday: [],
+                lastWeek: [],
+                lastMonth: [],
+                lastYear: [],
+                older: []
+            };
+
+            historyData.forEach(item => {
+                const visitDate = new Date(item.time);
+                const daysAgo = Math.floor((now - visitDate) / (1000 * 60 * 60 * 24)); // Calculate days ago
+
+                if (daysAgo === 0) {
+                    sections.today.push(item);
+                } else if (daysAgo === 1) {
+                    sections.yesterday.push(item);
+                } else if (daysAgo >= 2 && daysAgo <= 7) {
+                    sections.lastWeek.push(item);
+                } else if (daysAgo >= 8 && daysAgo <= 30) {
+                    sections.lastMonth.push(item);
+                } else if (daysAgo >= 31 && daysAgo <= 365) {
+                    sections.lastYear.push(item);
+                } else {
+                    sections.older.push(item);
+                }
+            });
+
+            displayHistorySections(sections);
+        }
+
+        // Function to display sections if they have history items
+        function displayHistorySections(sections) {
+            const historyList = document.getElementById('history-list');
+            historyList.innerHTML = ''; // Clear the list before populating
+
+            if (sections.today.length > 0) createSection(historyList, 'Today', sections.today);
+            if (sections.yesterday.length > 0) createSection(historyList, 'Yesterday', sections.yesterday);
+            if (sections.lastWeek.length > 0) createSection(historyList, 'Last Week', sections.lastWeek);
+            if (sections.lastMonth.length > 0) createSection(historyList, 'Last Month', sections.lastMonth);
+            if (sections.lastYear.length > 0) createSection(historyList, 'Last Year', sections.lastYear);
+            if (sections.older.length > 0) createSection(historyList, 'Older', sections.older);
+        }
+
+        // Function to create a section with history items
+        function createSection(container, title, items) {
+            const section = document.createElement('section');
+            section.classList.add('mb-6');
+
+            const header = document.createElement('h2');
+            header.classList.add('text-xl', 'font-semibold', 'text-gray-700', 'mb-4');
+            header.textContent = title;
+
+            const list = document.createElement('ul');
+            list.classList.add('divide-y', 'divide-gray-200');
+
+            items.forEach(item => {
+                const listItem = document.createElement('li');
+                listItem.classList.add('py-4', 'flex', 'justify-between', 'items-center');
+
+                const timeAgo = calculateTimeAgo(item.time);
+
+                listItem.innerHTML = `
+                    <div class="text-gray-700">
+                        <a href="${item.url}" class="text-blue-600 hover:underline">${item.title || item.url}</a>
+                        <p class="text-sm text-gray-500">Visited ${timeAgo}</p>
+                    </div>
+                    <button class="text-gray-400 hover:text-gray-700" onclick="removeHistory(${item.id})">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                `;
+                list.appendChild(listItem);
+            });
+
+            section.appendChild(header);
+            section.appendChild(list);
+            container.appendChild(section);
+        }
+
+        // Function to calculate time ago from a date string
+        function calculateTimeAgo(time) {
+            const now = new Date();
+            const historyDate = new Date(time);
+            const diffInSeconds = Math.floor((now - historyDate) / 1000);
+
+            const minutes = Math.floor(diffInSeconds / 60);
+            const hours = Math.floor(minutes / 60);
+            const days = Math.floor(hours / 24);
+
+            if (days > 0) return `${days} day(s) ago`;
+            if (hours > 0) return `${hours} hour(s) ago`;
+            return `${minutes} minute(s) ago`;
+        }
+
+        // Function to remove history item
+        async function removeHistory(id) {
+            try {
+                await fetch('http://localhost:5000/remove_history', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id })
+                });
+                loadHistory(); // Reload the history after removal
+            } catch (error) {
+                console.error('Error removing history:', error);
+            }
+        }
+
+        // Load history on page load
+        window.onload = loadHistory;
+    </script>
+
+</body>
+</html>

@@ -18,8 +18,13 @@ history_manager = History()
 app.static_folder = os.path.join(os.path.dirname(__file__), 'static')
 
 
-@app.route('/', methods=['GET'])
+@app.route('/')
 def index():
+    return app.send_static_file('index.html')
+
+
+@app.route('/home')
+def home():
     return app.send_static_file('index.html')
 
 
@@ -58,27 +63,19 @@ def about():
     return 'Jaal is a web browser developed by S Technologies.<br/>Version: 1.0.0'
 
 
-@app.route('/bookmark', methods=['GET'])
+@app.route('/bookmark')
 def bookmark():
-    data = bookmark_manager.get_bookmark()
-    html = '<table border="1"><tr><th>ID</th><th>Title</th><th>URL</th><th>Favicon</th><th>Folder ID</th></tr>'
-    for row in data:
-        html += '<tr>'
-        for col in row:
-            html += '<td>' + str(col) + '</td>'
-        html += '</tr>'
-    html += '</table>'
-    return html
+    return app.send_static_file('history.html')
 
 
-@app.route('/get_folders', methods=['GET'])
+@app.route('/get_folder', methods=['GET'])
 def get_folders():
     parent_id = request.args.get('parent_id')
-    folders = bookmark_manager.get_folders(parent_id)
+    folders = bookmark_manager.get_folder(parent_id)
     return jsonify([{'id': folder[0], 'name': folder[1], 'parent_id': folder[2]} for folder in folders])
 
 
-@app.route('/get_bookmarks', methods=['GET'])
+@app.route('/get_bookmark', methods=['GET'])
 def get_bookmarks():
     folder_id = request.args.get('folder_id')
     bookmarks = bookmark_manager.get_bookmarks(folder_id)
@@ -87,7 +84,12 @@ def get_bookmarks():
          bookmarks])
 
 
-@app.route('/get_history', methods=['GET'])
+@app.route('/history')
+def history():
+    return app.send_static_file('history.html')
+
+
+@app.route('/get_history')
 def get_history():
     history_entries = history_manager.get_history()
     history_list = []
@@ -107,9 +109,19 @@ def add_history():
     data = request.get_json()
     title = data['title']
     url = data['url']
-    time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-    favicon = base64.b64decode(data['favicon']) if 'favicon' in data else None
+    time = data['time']
+
+    # Handle favicon correctly
+    favicon = None
+    if 'favicon' in data and isinstance(data['favicon'], str) and data['favicon']:
+        try:
+            favicon = base64.b64decode(data['favicon'])
+        except (TypeError, ValueError) as e:
+            print(f"Invalid favicon data: {e}")
+
+    # Add history entry to database
     history_manager.add_history_entry(title, url, time, favicon)
+
     return jsonify({'message': 'History entry added successfully'})
 
 

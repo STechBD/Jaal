@@ -1,5 +1,6 @@
 import os
 import sqlite3
+from datetime import datetime
 
 
 class Bookmark:
@@ -20,6 +21,7 @@ class Bookmark:
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 title TEXT NOT NULL,
                 url TEXT NOT NULL,
+                time TEXT,
                 favicon BLOB,
                 folder_id INTEGER,
                 FOREIGN KEY (folder_id) REFERENCES folder(id)
@@ -31,6 +33,7 @@ class Bookmark:
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 name TEXT NOT NULL,
                 parent_id INTEGER,
+                time TEXT,
                 FOREIGN KEY (parent_id) REFERENCES folder(id)
             )
         ''')
@@ -38,11 +41,11 @@ class Bookmark:
         conn.commit()
         conn.close()
 
-    def add_bookmark(self, title, url, favicon=None, folder_id=None):
+    def add_bookmark(self, title, url, time=datetime.now().strftime('%Y-%m-%d %H:%M:%S'), favicon=None, folder_id=None):
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
-        cursor.execute('INSERT INTO bookmark (title, url, favicon, folder_id) VALUES (?, ?, ?, ?)',
-                       (title, url, favicon, folder_id))
+        cursor.execute('INSERT INTO bookmark (title, url, time, favicon, folder_id) VALUES (?, ?, ?, ?, ?)',
+                       (title, url, time, favicon, folder_id))
         conn.commit()
         conn.close()
 
@@ -72,10 +75,10 @@ class Bookmark:
         conn.close()
         return bookmark is not None
 
-    def add_folder(self, name, parent_id=None):
+    def add_folder(self, name, time=datetime.now().strftime('%Y-%m-%d %H:%M:%S'), parent_id=None):
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
-        cursor.execute('INSERT INTO folder (name, parent_id) VALUES (?, ?)', (name, parent_id))
+        cursor.execute('INSERT INTO folder (name, time, parent_id) VALUES (?, ?, ?)', (name, time,  parent_id))
         conn.commit()
         conn.close()
 

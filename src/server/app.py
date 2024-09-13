@@ -65,7 +65,7 @@ def about():
 
 @app.route('/bookmark')
 def bookmark():
-    return app.send_static_file('history.html')
+    return app.send_static_file('bookmark.html')
 
 
 @app.route('/get_folder', methods=['GET'])
@@ -75,13 +75,49 @@ def get_folders():
     return jsonify([{'id': folder[0], 'name': folder[1], 'parent_id': folder[2]} for folder in folders])
 
 
+@app.route('/add_folder', methods=['POST'])
+def add_folder():
+    data = request.get_json()
+    name = data['name']
+    parent_id = data['parent_id']
+    bookmark_manager.add_folder(name, parent_id)
+    return jsonify({'message': 'Folder added successfully'})
+
+
+@app.route('/remove_folder', methods=['POST'])
+def remove_folder():
+    data = request.get_json()
+    folder_id = data['id']
+    bookmark_manager.remove_folder(folder_id)
+    return jsonify({'message': 'Folder removed successfully'})
+
+
 @app.route('/get_bookmark', methods=['GET'])
 def get_bookmarks():
     folder_id = request.args.get('folder_id')
-    bookmarks = bookmark_manager.get_bookmarks(folder_id)
+    bookmarks = bookmark_manager.get_bookmark(folder_id)
     return jsonify(
         [{'id': bookmark[0], 'title': bookmark[1], 'url': bookmark[2], 'favicon': bookmark[3]} for bookmark in
          bookmarks])
+
+
+@app.route('/add_bookmark', methods=['POST'])
+def add_bookmark():
+    data = request.get_json()
+    title = data['title']
+    url = data['url']
+    folder_id = data['folder_id']
+    favicon = data['favicon']
+    bookmark_manager.add_bookmark(title, url, folder_id, favicon)
+    return jsonify({'message': 'Bookmark added successfully'})
+
+
+@app.route('/remove_bookmark', methods=['POST'])
+def remove_bookmark():
+    data = request.get_json()
+    bookmark_id = data['id']
+    bookmark_manager.remove_bookmark(bookmark_id)
+    return jsonify({'message': 'Bookmark removed successfully'})
 
 
 @app.route('/history')
@@ -131,6 +167,14 @@ def remove_history():
     history_id = data['id']
     history_manager.remove_history_entry(history_id)
     return jsonify({'message': 'History entry removed successfully'})
+
+
+@app.route('/clear_history', methods=['POST'])
+def clear_history():
+    history_entries = history_manager.get_history()
+    for entry in history_entries:
+        history_manager.remove_history_entry(entry[0])
+    return jsonify({'message': 'History cleared successfully'})
 
 
 if __name__ == '__main__':

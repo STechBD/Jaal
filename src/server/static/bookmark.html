@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bookmark</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="js/tailwindcss-3.4.5.js"></script>
+    <link rel="stylesheet" href="css/main.css">
+</head>
+<body class="bg-gray-100 text-gray-800">
+
+    <!-- Header -->
+    <header class="bg-white shadow-md sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto p-4 flex items-center justify-between">
+            <h1 class="text-2xl font-semibold text-gray-700">Bookmark</h1>
+            <div class="flex">
+                <input type="text" placeholder="Search bookmark" class="border border-gray-300 rounded-md px-4 py-2 w-80 focus:outline-none focus:ring focus:ring-blue-300" />
+                <button class="ml-2 px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 focus:outline-none">Search</button>
+            </div>
+        </div>
+    </header>
+
+    <div class="flex container mx-auto p-4">
+        <!-- Left sidebar for folders -->
+        <div id="folderTree" class="w-1/4 bg-white shadow-md rounded-lg p-4 mr-4">
+            <h2 class="text-lg font-semibold">Folders</h2>
+            <div id="folders">
+                <!-- Folders will load here -->
+            </div>
+            <button class="ml-2 px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 focus:outline-none" onclick="addFolder()">Add Folder</button>
+        </div>
+
+        <!-- Bookmark Tree -->
+        <div id="bookmarkTree" class="w-3/4 bg-white shadow-md rounded-lg p-4">
+            <h2 class="text-lg font-semibold">Bookmarks</h2>
+            <div id="bookmarks">
+                <!-- Bookmarks will load here -->
+            </div>
+            <button class="ml-2 px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 focus:outline-none" onclick="addBookmark()">Add Bookmark</button>
+        </div>
+    </div>
+
+<script>
+    let selectedFolderId = null;
+
+    async function loadFolders() {
+        const response = await fetch('http://localhost:5000/get_folder');
+        const folderData = await response.json();
+        const folderContainer = document.getElementById('folders');
+        folderContainer.innerHTML = '';
+
+        folderData.forEach(folder => {
+            const folderHTML = `
+                <div class="folder cursor-pointer px-2 py-1 mb-2 rounded flex justify-between items-center" onclick="selectFolder(${folder.id})">
+                    <span class="flex justify-center items-center">
+                        <span class="mr-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-folder2" viewBox="0 0 16 16">
+                              <path d="M1 3.5A1.5 1.5 0 0 1 2.5 2h2.764c.958 0 1.76.56 2.311 1.184C7.985 3.648 8.48 4 9 4h4.5A1.5 1.5 0 0 1 15 5.5v7a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 1 12.5zM2.5 3a.5.5 0 0 0-.5.5V6h12v-.5a.5.5 0 0 0-.5-.5H9c-.964 0-1.71-.629-2.174-1.154C6.374 3.334 5.82 3 5.264 3zM14 7H2v5.5a.5.5 0 0 0 .5.5h11a.5.5 0 0 0 .5-.5z"/>
+                            </svg>
+                        </span>
+                        ${folder.name}
+                    </span>
+                    <button class="text-gray-400 hover:text-gray-700" onclick="removeFolder(${folder.id})">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>`;
+            folderContainer.innerHTML += folderHTML;
+        });
+    }
+
+    async function selectFolder(id) {
+        selectedFolderId = id;
+        await loadBookmarks(id);
+    }
+
+    async function loadBookmarks(folderId = null) {
+        const response = await fetch(`http://localhost:5000/get_bookmark?folder_id=${folderId || ''}`);
+        const bookmarkData = await response.json();
+        const bookmarkContainer = document.getElementById('bookmarks');
+        bookmarkContainer.innerHTML = '';
+
+        bookmarkData.forEach(bookmark => {
+            const bookmarkHTML = `
+                <div class="bookmark cursor-pointer px-2 py-1 mb-2 rounded flex justify-between items-center">
+                    <span class="flex justify-center items-center">
+                        <span class="mr-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-globe2" viewBox="0 0 16 16">
+                              <path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8m7.5-6.923c-.67.204-1.335.82-1.887 1.855q-.215.403-.395.872c.705.157 1.472.257 2.282.287zM4.249 3.539q.214-.577.481-1.078a7 7 0 0 1 .597-.933A7 7 0 0 0 3.051 3.05q.544.277 1.198.49zM3.509 7.5c.036-1.07.188-2.087.436-3.008a9 9 0 0 1-1.565-.667A6.96 6.96 0 0 0 1.018 7.5zm1.4-2.741a12.3 12.3 0 0 0-.4 2.741H7.5V5.091c-.91-.03-1.783-.145-2.591-.332M8.5 5.09V7.5h2.99a12.3 12.3 0 0 0-.399-2.741c-.808.187-1.681.301-2.591.332zM4.51 8.5c.035.987.176 1.914.399 2.741A13.6 13.6 0 0 1 7.5 10.91V8.5zm3.99 0v2.409c.91.03 1.783.145 2.591.332.223-.827.364-1.754.4-2.741zm-3.282 3.696q.18.469.395.872c.552 1.035 1.218 1.65 1.887 1.855V11.91c-.81.03-1.577.13-2.282.287zm.11 2.276a7 7 0 0 1-.598-.933 9 9 0 0 1-.481-1.079 8.4 8.4 0 0 0-1.198.49 7 7 0 0 0 2.276 1.522zm-1.383-2.964A13.4 13.4 0 0 1 3.508 8.5h-2.49a6.96 6.96 0 0 0 1.362 3.675c.47-.258.995-.482 1.565-.667m6.728 2.964a7 7 0 0 0 2.275-1.521 8.4 8.4 0 0 0-1.197-.49 9 9 0 0 1-.481 1.078 7 7 0 0 1-.597.933M8.5 11.909v3.014c.67-.204 1.335-.82 1.887-1.855q.216-.403.395-.872A12.6 12.6 0 0 0 8.5 11.91zm3.555-.401c.57.185 1.095.409 1.565.667A6.96 6.96 0 0 0 14.982 8.5h-2.49a13.4 13.4 0 0 1-.437 3.008M14.982 7.5a6.96 6.96 0 0 0-1.362-3.675c-.47.258-.995.482-1.565.667.248.92.4 1.938.437 3.008zM11.27 2.461q.266.502.482 1.078a8.4 8.4 0 0 0 1.196-.49 7 7 0 0 0-2.275-1.52c.218.283.418.597.597.932m-.488 1.343a8 8 0 0 0-.395-.872C9.835 1.897 9.17 1.282 8.5 1.077V4.09c.81-.03 1.577-.13 2.282-.287z"/>
+                            </svg>
+                        </span>
+                        <a href="${bookmark.url}" target="_blank" class="text-blue-600 hover:underline">
+                            ${bookmark.title}
+                        </a>
+                    </span>
+                    <button class="text-gray-400 hover:text-gray-700" onclick="removeBookmark(${bookmark.id})">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>`;
+            bookmarkContainer.innerHTML += bookmarkHTML;
+        });
+    }
+
+    async function addBookmark() {
+        const title = prompt('Enter bookmark title:');
+        const url = prompt('Enter bookmark URL:');
+        const favicon = null; // Handle favicon if needed
+
+        const data = { title, url, folder_id: selectedFolderId, favicon };
+        await fetch('http://localhost:5000/add_bookmark', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        });
+
+        await loadBookmarks(selectedFolderId);
+    }
+
+    async function removeBookmark(id) {
+        const data = { id };
+        await fetch('http://localhost:5000/remove_bookmark', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        });
+
+        await loadBookmarks(selectedFolderId);
+    }
+
+    async function addFolder() {
+        const name = prompt('Enter folder name:');
+        const data = { name, parent_id: selectedFolderId };
+        await fetch('http://localhost:5000/add_folder', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        });
+
+        await loadFolders();
+    }
+
+    async function removeFolder(id) {
+        const data = { id };
+        await fetch('http://localhost:5000/remove_folder', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        });
+
+        await loadFolders();
+    }
+
+    window.onload = () => {
+        loadFolders();
+        loadBookmarks();
+    };
+</script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/js/all.min.js"></script>
+</body>
+</html>

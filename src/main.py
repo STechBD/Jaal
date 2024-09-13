@@ -79,23 +79,28 @@ class Jaal(QMainWindow):
 
         self.bookmarks_action = QAction('Bookmarks', self)
         self.bookmarks_action.triggered.connect(self.show_bookmark_manager)
+        self.bookmarks_action.setShortcut('Ctrl+B')
         self.file_menu.addAction(self.bookmarks_action)
 
         self.history_action = QAction('History', self)
         self.history_action.triggered.connect(self.show_history)
+        self.history_action.setShortcut('Ctrl+H')
         self.file_menu.addAction(self.history_action)
 
         self.settings_action = QAction('Settings', self)
         self.settings_action.triggered.connect(self.show_settings)
+        self.settings_action.setShortcut('Ctrl+,')
         self.file_menu.addAction(self.settings_action)
 
         self.exit_action = QAction('Exit', self)
         self.exit_action.triggered.connect(self.exit_browser)
+        self.exit_action.setShortcut('Ctrl+Q')
         self.file_menu.addAction(self.exit_action)
 
         # Edit Menu
         self.add_bookmark_action = QAction('Add Bookmark', self)
         self.add_bookmark_action.triggered.connect(self.add_bookmark)
+        self.add_bookmark_action.setShortcut('Ctrl+D')
         self.edit_menu.addAction(self.add_bookmark_action)
 
         self.remove_bookmark_action = QAction('Remove Bookmark', self)
@@ -138,6 +143,7 @@ class Jaal(QMainWindow):
 
         self.back_button = QAction(QIcon('image/back.svg'), 'Back', self)
         self.back_button.triggered.connect(self.back)
+        self.back_button.setShortcut('Alt+Left')
         self.toolbar.addAction(self.back_button)
 
         self.forward_button = QAction(QIcon('image/forward.svg'), 'Forward', self)
@@ -146,6 +152,8 @@ class Jaal(QMainWindow):
 
         self.reload_button = QAction(QIcon('image/reload.svg'), 'Reload', self)
         self.reload_button.triggered.connect(self.reload)
+        self.reload_button.setShortcut('Ctrl+R')
+        self.reload_button.setShortcut('F5')
         self.toolbar.addAction(self.reload_button)
 
         self.home_button = QAction(QIcon('image/home.svg'), 'Home', self)
@@ -167,9 +175,14 @@ class Jaal(QMainWindow):
         self.remove_bookmark_action.triggered.connect(self.remove_bookmark)
         self.toolbar.addAction(self.remove_bookmark_action)
 
+        # New Tab Button
+        self.new_tab_button = QAction(QIcon('image/new.svg'), 'New Tab', self)
+        self.new_tab_button.triggered.connect(self.create_tab)
+        self.new_tab_button.setShortcut('Ctrl+T')
+        self.toolbar.addAction(self.new_tab_button)
+
         # Start the browser
         self.create_tab()
-        self.show()
         self.showMaximized()
 
         # Start the Flask server in a separate thread
@@ -208,6 +221,16 @@ class Jaal(QMainWindow):
         # Create a new tab for the request
         self.tabs.addTab(new_tab, 'New Tab')
         self.tabs.setCurrentWidget(new_tab)
+
+        # Update the Address Bar
+        url = new_tab.url().toString()
+        if url.startswith('http://localhost:5000/'):
+            url = url.replace('http://localhost:5000/', 'jaal://')
+        self.url_input.setText(url)
+
+        new_tab.titleChanged.connect(lambda title: self.tabs.setTabText(self.tabs.indexOf(new_tab), title))
+        new_tab.loadStarted.connect(self.tab_load_started)
+        new_tab.loadFinished.connect(self.tab_load_finished)
 
         return new_tab.page()
 
@@ -276,11 +299,11 @@ class Jaal(QMainWindow):
 
         # Update bookmark actions based on whether the URL is bookmarked
         if self.bookmark_manager.is_bookmarked(url):
-            self.add_bookmark_action.setEnabled(False)
-            self.remove_bookmark_action.setEnabled(True)
+            self.add_bookmark_action.setVisible(False)
+            self.remove_bookmark_action.setVisible(True)
         else:
-            self.add_bookmark_action.setEnabled(True)
-            self.remove_bookmark_action.setEnabled(False)
+            self.add_bookmark_action.setVisible(True)
+            self.remove_bookmark_action.setVisible(False)
 
     def add_bookmark(self):
         """
@@ -292,10 +315,14 @@ class Jaal(QMainWindow):
         if self.tab:
             url = self.tab.url().toString()
             title = self.tab.title()
-            self.bookmark_manager.add_bookmark(url, title)
-            QMessageBox.information(self, 'Add Bookmark', 'Bookmark added successfully.')
-            self.add_bookmark_action.setEnabled(False)
-            self.remove_bookmark_action.setEnabled(True)
+
+            if not self.bookmark_manager.is_bookmarked(url):
+                self.bookmark_manager.add_bookmark(title, url, favicon=self.tab.icon().pixmap(16, 16).toImage().save(url + '.ico', 'ICO'))
+                QMessageBox.information(self, 'Add Bookmark', 'Bookmark added successfully.')
+                self.add_bookmark_action.setVisible(False)
+                self.remove_bookmark_action.setVisible(True)
+            else:
+                QMessageBox.information(self, 'Add Bookmark', 'Bookmark already exists.')
 
     def remove_bookmark(self):
         """
@@ -307,9 +334,13 @@ class Jaal(QMainWindow):
         if self.tab:
             url = self.tab.url().toString()
             self.bookmark_manager.remove_bookmark(url)
-            QMessageBox.information(self, 'Remove Bookmark', 'Bookmark removed successfully.')
-            self.add_bookmark_action.setEnabled(True)
-            self.remove_bookmark_action.setEnabled(False)
+
+            if self.bookmark_manager.is_bookmarked(url):
+                QMessageBox.information(self, 'Remove Bookmark', 'Bookmark removed successfully.')
+                self.add_bookmark_action.setVisible(True)
+                self.remove_bookmark_action.setVisible(False)
+            else:
+                QMessageBox.information(self, 'Remove Bookmark', 'Bookmark does not exist.')
 
     def show_history(self):
         self.create_tab(url='jaal://history')
@@ -324,13 +355,7 @@ class Jaal(QMainWindow):
         :param favicon: Favicon of the page.
         :return: None
         """
-        data = {
-            'title': title,
-            'url': url,
-            'time': time,
-            'favicon': favicon
-        }
-        requests.post('http://localhost:5000/add_history', json=data)
+        self.history_manager.add_history_entry(title, url, time, favicon)
 
     def remove_history_entry(self, history_id):
         """
@@ -339,10 +364,7 @@ class Jaal(QMainWindow):
         :param history_id: ID of the history entry to be removed.
         :return: None
         """
-        data = {
-            'id': history_id
-        }
-        requests.post('http://localhost:5000/remove_history', json=data)
+        self.history_manager.remove_history_entry(history_id)
 
     def show_settings(self):
         """

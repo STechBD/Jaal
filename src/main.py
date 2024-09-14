@@ -12,24 +12,27 @@ Created: April 24, 2023
 License: MIT
 License URI: https://opensource.org/licenses/MIT
 """
-import random
+
 import sys
 import os
 import threading
-import requests
 import ctypes
-from datetime import datetime, timedelta
+from datetime import datetime
 from urllib.parse import urlparse
 
-from PyQt6.QtCore import QUrl, pyqtSignal
+from PyQt6.QtCore import QUrl
 from PyQt6.QtGui import QAction, QIcon
 from PyQt6.QtWebEngineWidgets import QWebEngineView
-from PyQt6.QtWebEngineCore import QWebEnginePage
-from PyQt6.QtWidgets import QApplication, QMainWindow, QLineEdit, QTabWidget, QMessageBox, QToolBar
+from PyQt6.QtWidgets import QApplication, QMainWindow, QPushButton, QLineEdit, QTabWidget, QMessageBox, QToolBar
+
+
+import qdarktheme
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from server.app import app as flask_app
+from lib.engine import JaalEngine
+from lib.setting import Setting
 from lib.bookmark import Bookmark
 from lib.history import History
 
@@ -55,15 +58,17 @@ class Jaal(QMainWindow):
         self.url_input = QLineEdit()
         self.setWindowTitle('Jaal Browser')
         self.setWindowIcon(QIcon('image/Jaal-Logo-Round.svg'))
+        self.setting_manager = Setting()
         self.bookmark_manager = Bookmark()
         self.history_manager = History()
+        self.dark_mode = self.setting_manager.get_setting('mode') == 'dark'
 
         # Tab Widget
         self.tabs = QTabWidget()
         self.tabs.setTabsClosable(True)
         self.tabs.tabCloseRequested.connect(self.close_tab)
         self.setCentralWidget(self.tabs)
-        self.tabs.currentChanged.connect(lambda index: self.url_input.setText(self.tabs.widget(index).url().toString().replace('http://localhost:5000/', 'jaal://') if self.tabs.widget(index).url().toString().startswith('http://localhost:5000/') else self.tabs.widget(index).url().toString()))
+        self.tabs.currentChanged.connect(self.update_url_input)
 
         # Menu Bar
         self.menu_bar = self.menuBar()
@@ -97,6 +102,11 @@ class Jaal(QMainWindow):
         self.exit_action.setShortcut('Ctrl+Q')
         self.file_menu.addAction(self.exit_action)
 
+        self.mode_action = QAction('Dark Mode', self)
+        self.mode_action.triggered.connect(self.mode)
+        self.mode_action.setShortcut('Ctrl+M')
+        self.file_menu.addAction(self.mode_action)
+
         # Edit Menu
         self.add_bookmark_action = QAction('Add Bookmark', self)
         self.add_bookmark_action.triggered.connect(self.add_bookmark)
@@ -125,7 +135,11 @@ class Jaal(QMainWindow):
         self.view_menu.addAction(self.reload_action)
 
         self.stop_action = QAction('Stop', self)
-        # self.stop_action.triggered.connect(self.stop)  # Uncomment and implement if needed
+        self.stop_action.triggered.connect(self.stop)
+        self.view_menu.addAction(self.stop_action)
+
+        self.stop_action = QAction('Stop', self)
+        self.stop_action.triggered.connect(self.stop)
         self.view_menu.addAction(self.stop_action)
 
         # Help Menu
@@ -156,6 +170,11 @@ class Jaal(QMainWindow):
         self.reload_button.setShortcut('F5')
         self.toolbar.addAction(self.reload_button)
 
+        self.stop_button = QAction(QIcon('image/stop.svg'), 'Stop', self)
+        self.stop_button.triggered.connect(self.stop)
+        self.stop_button.setShortcut('Esc')
+        self.toolbar.addAction(self.stop_button)
+
         self.home_button = QAction(QIcon('image/home.svg'), 'Home', self)
         self.home_button.triggered.connect(self.go_home)
         self.toolbar.addAction(self.home_button)
@@ -166,6 +185,12 @@ class Jaal(QMainWindow):
 
         self.toolbar.addSeparator()
 
+        # New Tab Button
+        self.new_tab_button = QAction(QIcon('image/new.svg'), 'New Tab', self)
+        self.new_tab_button.triggered.connect(self.create_tab)
+        self.new_tab_button.setShortcut('Ctrl+T')
+        self.toolbar.addAction(self.new_tab_button)
+
         # Bookmark Widget
         self.add_bookmark_action = QAction(QIcon('image/add-bookmark.svg'), 'Add Bookmark', self)
         self.add_bookmark_action.triggered.connect(self.add_bookmark)
@@ -175,35 +200,22 @@ class Jaal(QMainWindow):
         self.remove_bookmark_action.triggered.connect(self.remove_bookmark)
         self.toolbar.addAction(self.remove_bookmark_action)
 
-        # New Tab Button
-        self.new_tab_button = QAction(QIcon('image/new.svg'), 'New Tab', self)
-        self.new_tab_button.triggered.connect(self.create_tab)
-        self.new_tab_button.setShortcut('Ctrl+T')
-        self.toolbar.addAction(self.new_tab_button)
+        # Start the Flask server in a separate thread
+        self.start_flask_server()
 
         # Start the browser
         self.create_tab()
         self.showMaximized()
 
-        # Start the Flask server in a separate thread
-        self.start_flask_server()
-
     def create_tab(self, url='jaal://home'):
         self.tab = QWebEngineView()
-
-        # Custom web page to handle opening links in new tabs
-        page = QWebEnginePage(self.tab)
-
-        # Override `createWindow` to handle requests for new tabs
+        page = JaalEngine(self.tab)
         page.createWindow = self.handle_create_new_tab
-
         self.tab.setPage(page)
 
-        # Ensure url is a string
         if not isinstance(url, str):
             url = 'jaal://home'
 
-        # Handle custom jaal:// URLs
         if url.startswith('jaal://'):
             url = self.handle_jaal_url(url)
 
@@ -214,9 +226,24 @@ class Jaal(QMainWindow):
         self.tabs.addTab(self.tab, 'New Tab')
         self.tabs.setCurrentWidget(self.tab)
 
+    def update_url_input(self, index):
+        """
+        Function to update the URL input box when the tab changes.
+
+        :param index: Index of the current tab.
+        :return: None
+        :since: 1.0.0
+        """
+        current_tab = self.tabs.widget(index)
+        if current_tab:
+            url = current_tab.url().toString()
+            if url.startswith('http://localhost:5000/'):
+                url = url.replace('http://localhost:5000/', 'jaal://')
+            self.url_input.setText(url)
+
     def handle_create_new_tab(self, _):
         new_tab = QWebEngineView()
-        new_tab.setPage(QWebEnginePage())
+        new_tab.setPage(JaalEngine(new_tab))
 
         # Create a new tab for the request
         self.tabs.addTab(new_tab, 'New Tab')
@@ -272,6 +299,8 @@ class Jaal(QMainWindow):
         :since: 1.0.0
         """
         self.status_bar.showMessage('Loading ...')
+        self.reload_button.setVisible(False)
+        self.stop_button.setVisible(True)
 
     def tab_load_finished(self):
         """
@@ -281,6 +310,8 @@ class Jaal(QMainWindow):
         :since: 1.0.0
         """
         self.status_bar.showMessage('Page is Ready')
+        self.reload_button.setVisible(True)
+        self.stop_button.setVisible(False)
 
         # Add favicon to the tab
         url = self.tab.url().toString()
@@ -293,7 +324,7 @@ class Jaal(QMainWindow):
         self.url_input.setText(url)
 
         # Add the Current URL to the History
-        if not self.history_manager.is_in_history(url) and not url.startswith('jaal://') and not url.startswith('http://localhost:5000/'):
+        if not url.startswith('jaal://') and not url.startswith('http://localhost:5000/'):
             icon_path = self.tab.icon().pixmap(16, 16).toImage().save(domain + '.ico', 'ICO')
             self.add_history_entry(self.tab.title(), url, datetime.now().strftime('%Y-%m-%d %H:%M:%S'), icon_path)
 
@@ -478,6 +509,29 @@ class Jaal(QMainWindow):
         :since: 1.0.0
         """
         QApplication.quit()
+
+    def mode(self):
+        """
+        Function to change the mode of the browser.
+
+        :return: None
+        :since: 1.0.0
+        """
+        self.dark_mode = not self.dark_mode
+        self.apply_mode()
+
+    def apply_mode(self):
+        """
+        Apply the current mode (dark or light).
+        """
+        if self.dark_mode:
+            QApplication.instance().setStyleSheet(qdarktheme.load_stylesheet('dark'))
+            self.mode_action.setText('Light Mode')
+            self.setting_manager.update_setting('mode', 'dark')
+        else:
+            QApplication.instance().setStyleSheet(qdarktheme.load_stylesheet('light'))
+            self.mode_action.setText('Dark Mode')
+            self.setting_manager.update_setting('mode', 'light')
 
     def start_flask_server(self):
         """

@@ -501,7 +501,8 @@ class Jaal(QMainWindow):
         """
         self.create_tab(url='jaal://about')
 
-    def exit_browser(self):
+    @staticmethod
+    def exit_browser():
         """
         Function to exit the browser.
 
@@ -533,7 +534,8 @@ class Jaal(QMainWindow):
             self.mode_action.setText('Dark Mode')
             self.setting_manager.update_setting('mode', 'light')
 
-    def start_flask_server(self):
+    @staticmethod
+    def start_flask_server():
         """
         Function to start the Flask server in a separate thread.
 

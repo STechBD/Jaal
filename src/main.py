@@ -205,6 +205,7 @@ class Jaal(QMainWindow):
 
         # Start the browser
         self.create_tab()
+        self.apply_mode()
         self.showMaximized()
 
     def create_tab(self, url='jaal://home'):
@@ -526,13 +527,129 @@ class Jaal(QMainWindow):
         Apply the current mode (dark or light).
         """
         if self.dark_mode:
+            # Apply base dark theme
             QApplication.instance().setStyleSheet(qdarktheme.load_stylesheet('dark'))
+            
+            # Apply custom futuristic theme
+            self.load_custom_theme()
+            
             self.mode_action.setText('Light Mode')
             self.setting_manager.update_setting('mode', 'dark')
         else:
             QApplication.instance().setStyleSheet(qdarktheme.load_stylesheet('light'))
             self.mode_action.setText('Dark Mode')
             self.setting_manager.update_setting('mode', 'light')
+
+    def load_custom_theme(self):
+        """
+        Load and apply the custom futuristic QSS theme.
+        """
+        qss = """
+        /* Main Window */
+        QMainWindow {
+            background-color: #000000;
+        }
+
+        /* ToolBar */
+        QToolBar {
+            background-color: #0a0a0a;
+            border-bottom: 1px solid #333333;
+            spacing: 10px;
+            padding: 5px;
+        }
+        
+        QToolButton {
+            background-color: transparent;
+            border: 1px solid transparent;
+            border-radius: 4px;
+            color: #ffffff;
+            padding: 4px;
+        }
+        
+        QToolButton:hover {
+            background-color: rgba(57, 255, 20, 0.1); /* Green tint */
+            border: 1px solid rgba(57, 255, 20, 0.3);
+        }
+
+        /* Address Bar */
+        QLineEdit {
+            background-color: rgba(255, 255, 255, 0.08);
+            border: 1px solid #333333;
+            border-radius: 8px;
+            color: #ffffff;
+            padding: 6px 12px;
+            font-size: 14px;
+            selection-background-color: #A855F7; /* Purple */
+        }
+        
+        QLineEdit:focus {
+            border: 1px solid #39FF14; /* Green */
+            background-color: rgba(255, 255, 255, 0.12);
+        }
+
+        /* Tab Widget */
+        QTabWidget::pane {
+            border: 1px solid #333333;
+            background-color: #000000;
+        }
+        
+        QTabBar::tab {
+            background-color: #111111;
+            color: #888888;
+            border: 1px solid #222222;
+            border-bottom: none;
+            border-top-left-radius: 6px;
+            border-top-right-radius: 6px;
+            padding: 8px 16px;
+            margin-right: 2px;
+            min-width: 120px;
+        }
+        
+        QTabBar::tab:selected {
+            background-color: #000000;
+            color: #39FF14; /* Green text */
+            border-top: 2px solid #39FF14; /* Green top border */
+            border-bottom: 1px solid #000000; /* Seamless blend */
+        }
+        
+        QTabBar::tab:hover:!selected {
+            background-color: #1a1a1a;
+            color: #ffffff;
+        }
+        
+        /* Status Bar */
+        QStatusBar {
+            background-color: #0a0a0a;
+            color: #888888;
+            border-top: 1px solid #222222;
+        }
+
+        /* Menu Bar */
+        QMenuBar {
+            background-color: #0a0a0a;
+            color: #ffffff;
+        }
+        
+        QMenuBar::item:selected {
+            background-color: rgba(57, 255, 20, 0.1);
+            color: #39FF14;
+        }
+        
+        QMenu {
+            background-color: #111111;
+            border: 1px solid #333333;
+            color: #ffffff;
+        }
+        
+        QMenu::item:selected {
+            background-color: rgba(168, 85, 247, 0.2); /* Purple tint */
+            color: #ffffff;
+        }
+        """
+        
+        # Append to existing stylesheet
+        current_style = QApplication.instance().styleSheet()
+        QApplication.instance().setStyleSheet(current_style + qss)
 
     @staticmethod
     def start_flask_server():

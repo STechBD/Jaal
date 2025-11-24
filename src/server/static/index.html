@@ -1,111 +1,187 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="dark">
+
 <head>
     <meta charset="UTF-8">
     <title>New Tab</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <script src="js/tailwindcss-3.4.5.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#39FF14',
+                        secondary: '#A855F7',
+                        accent: '#06B6D4',
+                    }
+                }
+            }
+        }
+    </script>
     <link rel="stylesheet" href="css/main.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
 </head>
-<body class="text-gray-900 h-screen px-[10rem] lg:px-0 py-[50rem] flex items-center justify-center overflow-y-auto">
 
-<!-- Main container -->
-<div class="max-w-7xl mx-auto p-4 bg-gray-100 bg-opacity-40 rounded-xl">
-    <!-- Header -->
-    <header class="flex items-center justify-between mb-6">
-        <h1 class="text-3xl font-bold text-black">Ulkaa Start</h1>
-        <div id="time" class="text-3xl font-bold">
-            Loading...
-        </div>
-        <div class="flex space-x-4">
-            <a class="bg-blue-500 text-white px-4 py-2 rounded" href="https://www.ulkaa.com/login" target="_blank">
-                Sign In
-            </a>
-            <a class="bg-gray-200 text-black px-4 py-2 rounded" href="https://www.ulkaa.com/register" target="_blank">
-                Register
-            </a>
-        </div>
-    </header>
+<body class="h-screen w-full overflow-hidden relative text-white">
 
-    <!-- URL and searchbar -->
-    <div class="bg-white shadow-lg rounded-lg p-4 my-8 flex items-center space-x-4">
-        <div class="">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-search" viewBox="0 0 16 16">
-                <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001q.044.06.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1 1 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0"/>
-            </svg>
-        </div>
-        <input id="search-widget" type="text" class="flex-1 bg-transparent focus:outline-none" placeholder="Search or type URL">
+    <!-- Animated Canvas Background -->
+    <canvas id="neuron-canvas" class="absolute top-0 left-0 w-full h-full z-0"></canvas>
+
+    <!-- Gradient Orbs -->
+    <div
+        class="absolute top-20 left-10 w-96 h-96 bg-green-500/20 rounded-full blur-[120px] animate-pulse-glow pointer-events-none">
+    </div>
+    <div class="absolute bottom-20 right-10 w-96 h-96 bg-purple-500/20 rounded-full blur-[120px] animate-pulse-glow pointer-events-none"
+        style="animation-delay: 1s;"></div>
+    <div class="absolute top-1/2 left-1/2 w-96 h-96 bg-cyan-500/10 rounded-full blur-[100px] animate-pulse-glow pointer-events-none"
+        style="animation-delay: 2s;"></div>
+
+    <!-- Grid Overlay -->
+    <div class="absolute inset-0 z-0 opacity-10 pointer-events-none"
+        style="background-image: linear-gradient(#39FF14 1px, transparent 1px), linear-gradient(90deg, #39FF14 1px, transparent 1px); background-size: 50px 50px;">
     </div>
 
-    <!-- Widgets grid -->
-    <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
-        <!-- Weather widget -->
-        <div id="weather-widget" class="bg-white shadow-lg rounded-lg p-6 col-span-2">
-            <h2 class="text-xl font-semibold mb-4">Weather</h2>
-            <div id="weatherapi-weather-widget-3"></div>
-            <div class="flex items-center justify-between hidden">
+    <!-- Main Content -->
+    <div class="relative z-10 h-full overflow-y-auto p-8">
+        <div class="max-w-7xl mx-auto">
+
+            <!-- Header -->
+            <header class="flex items-center justify-between mb-12">
                 <div>
-                    <p id="weather-temp" class="text-5xl font-bold">--</p>
-                    <p id="weather-desc" class="text-sm text-gray-500">Loading...</p>
+                    <h1 class="text-4xl font-extrabold tracking-tight">
+                        <span class="text-gradient">Ulkaa Start</span>
+                    </h1>
+                    <p class="text-gray-400 mt-1">Reclaim Your Privacy</p>
                 </div>
-                <div class="loading w-16 h-16 border-t-4 border-blue-500 rounded-full"></div>
+                <div id="time" class="text-5xl font-bold text-white/90 font-mono tracking-widest drop-shadow-lg">
+                    --:--:--
+                </div>
+                <div class="flex space-x-4">
+                    <a class="glass-panel px-6 py-2 rounded-lg text-green-400 hover:bg-green-500/10 transition-all border-green-500/30 hover:border-green-400"
+                        href="https://www.ulkaa.com/login" target="_blank">
+                        Sign In
+                    </a>
+                    <a class="glass-panel px-6 py-2 rounded-lg text-white hover:bg-white/10 transition-all"
+                        href="https://www.ulkaa.com/register" target="_blank">
+                        Register
+                    </a>
+                </div>
+            </header>
+
+            <!-- Search Bar -->
+            <div
+                class="glass-panel rounded-2xl p-1 mb-12 max-w-3xl mx-auto transform hover:scale-[1.01] transition-all duration-300">
+                <div class="flex items-center px-6 py-4">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24"
+                        stroke="currentColor" class="text-green-400 mr-4">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                    <input id="search-widget" type="text"
+                        class="flex-1 bg-transparent focus:outline-none text-xl text-white placeholder-gray-500"
+                        placeholder="Search the web or type a URL...">
+                </div>
             </div>
-            <p id="weather-location" class="text-sm mt-2 hidden">Dhaka, Bangladesh</p>
-        </div>
 
-        <div class="bg-white shadow-lg rounded-lg p-6 md:col-span-2 flex flex-col h-full w-full">
-                <h2 class="text-xl font-semibold mb-4"><label for="note">Note</label></h2>
-                <textarea id="note" class="w-full h-max bg-gray-100 p-2 rounded grow" placeholder="Write anything here..."></textarea>
-        </div>
+            <!-- Widgets Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
 
-        <!-- Task manager widget -->
-        <div class="bg-white shadow-lg rounded-lg p-6">
-            <h2 class="text-xl font-semibold mb-4">Tasks</h2>
-            <ul id="tasks-list">
-                <li class="flex justify-between items-center py-2 border-b">
-                    <span>Complete Assignment</span>
-                    <input type="checkbox">
-                </li>
-                <li class="flex justify-between items-center py-2 border-b">
-                    <span>Read Research Paper</span>
-                    <input type="checkbox">
-                </li>
-                <li class="flex justify-between items-center py-2">
-                    <span>Project Meeting</span>
-                    <input type="checkbox">
-                </li>
-            </ul>
-        </div>
+                <!-- Weather Widget -->
+                <div id="weather-widget" class="glass-panel rounded-2xl p-6 col-span-2 relative overflow-hidden group">
+                    <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" fill="currentColor"
+                            viewBox="0 0 16 16">
+                            <path
+                                d="M8 4.5a.5.5 0 0 1 .5.5v2.17l1.88-1.08a.5.5 0 1 1 .5.86l-2.12 1.22a.5.5 0 0 1-.5 0l-2.12-1.22a.5.5 0 1 1 .5-.86l1.88 1.08V5a.5.5 0 0 1 .5-.5z" />
+                        </svg>
+                    </div>
+                    <h2 class="text-xl font-semibold mb-4 text-green-400">Weather</h2>
+                    <div id="weatherapi-weather-widget-3"></div>
+                    <div class="flex items-center justify-between mt-4">
+                        <div>
+                            <p id="weather-temp" class="text-5xl font-bold text-white">--</p>
+                            <p id="weather-desc" class="text-sm text-gray-400 mt-1">Loading...</p>
+                        </div>
+                        <div class="loading w-12 h-12 border-t-2 border-green-500 rounded-full"></div>
+                    </div>
+                </div>
 
-        <!-- Currency widget -->
-        <div id="currency-widget" class="bg-white shadow-lg rounded-lg p-6">
-            <h2 class="text-xl font-semibold mb-4">Currency Exchange (USD-BDT)</h2>
-            <div id="currency-rate" class="text-3xl font-bold">--</div>
-            <p class="text-sm text-gray-500">Exchange rate</p>
-        </div>
+                <!-- Note Widget -->
+                <div class="glass-panel rounded-2xl p-6 md:col-span-2 flex flex-col h-full">
+                    <h2 class="text-xl font-semibold mb-4 text-purple-400">Quick Note</h2>
+                    <textarea id="note"
+                        class="w-full h-32 bg-black/20 p-4 rounded-xl text-gray-300 focus:outline-none focus:ring-1 focus:ring-purple-500/50 resize-none"
+                        placeholder="Jot down something..."></textarea>
+                </div>
 
-        <!-- Analog Clock widget -->
-        <div class="bg-white shadow-lg rounded-lg p-6 overflow-hidden">
-            <h2 class="text-xl font-semibold mb-4">Analog Clock</h2>
-            <div class="w-32 h-32 bg-white border-2 border-gray-200 rounded-full mx-auto">
-                <canvas id="clock-widget" width="128" height="128"></canvas>
+                <!-- Tasks Widget -->
+                <div class="glass-panel rounded-2xl p-6">
+                    <h2 class="text-xl font-semibold mb-4 text-cyan-400">Tasks</h2>
+                    <ul id="tasks-list" class="space-y-3">
+                        <li class="flex justify-between items-center group">
+                            <span class="text-gray-300 group-hover:text-white transition-colors">Complete
+                                Assignment</span>
+                            <input type="checkbox" class="accent-cyan-500 w-4 h-4 rounded border-gray-600 bg-gray-700">
+                        </li>
+                        <li class="flex justify-between items-center group">
+                            <span class="text-gray-300 group-hover:text-white transition-colors">Read Research
+                                Paper</span>
+                            <input type="checkbox" class="accent-cyan-500 w-4 h-4 rounded border-gray-600 bg-gray-700">
+                        </li>
+                        <li class="flex justify-between items-center group">
+                            <span class="text-gray-300 group-hover:text-white transition-colors">Project Meeting</span>
+                            <input type="checkbox" class="accent-cyan-500 w-4 h-4 rounded border-gray-600 bg-gray-700">
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Currency Widget -->
+                <div id="currency-widget" class="glass-panel rounded-2xl p-6">
+                    <h2 class="text-xl font-semibold mb-2 text-yellow-400">USD to BDT</h2>
+                    <div id="currency-rate" class="text-4xl font-bold text-white">--</div>
+                    <p class="text-xs text-gray-500 mt-1">Live Exchange Rate</p>
+                </div>
+
+                <!-- Analog Clock Widget -->
+                <div class="glass-panel rounded-2xl p-6 flex flex-col items-center justify-center">
+                    <h2 class="text-xl font-semibold mb-4 text-pink-400 w-full text-left">Clock</h2>
+                    <div class="relative">
+                        <canvas id="clock-widget" width="140" height="140"></canvas>
+                        <div
+                            class="absolute inset-0 rounded-full shadow-[0_0_15px_rgba(236,72,153,0.3)] pointer-events-none">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Calendar Widget -->
+                <div class="glass-panel rounded-2xl p-6">
+                    <h2 class="text-xl font-semibold mb-4 text-blue-400">Calendar</h2>
+                    <div id="calendar" class="text-center">
+                        <div class="animate-pulse">Loading...</div>
+                    </div>
+                </div>
+
+                <!-- News Widget -->
+                <div id="news-widget" class="glass-panel rounded-2xl p-6 col-span-1 md:col-span-3 lg:col-span-4">
+                    <h2 class="text-xl font-semibold mb-6 text-orange-400 flex items-center">
+                        <span class="mr-2">Latest News</span>
+                        <span class="text-xs bg-orange-500/20 text-orange-300 px-2 py-1 rounded-full">Live</span>
+                    </h2>
+                    <ul id="news-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <li class="text-gray-500">Loading news...</li>
+                    </ul>
+                </div>
+
             </div>
-        </div>
-
-        <!-- Calendar widget -->
-        <div class="bg-white shadow-lg rounded-lg p-6">
-            <h2 class="text-xl font-semibold mb-4">Calendar</h2>
-            <div id="calendar" class="text-gray-500">Loading calendar...</div>
-        </div>
-
-        <!-- News widget -->
-        <div id="news-widget" class="bg-white shadow-lg rounded-lg p-6 col-span-2 md:col-span-4">
-            <h2 class="text-xl font-semibold mb-4">Latest News</h2>
-            <ul id="news-list" class="text-gray-500 grid grid-cols-2 md:grid-cols-3">Loading news...</ul>
         </div>
     </div>
-</div>
-<script src="js/main.js"></script>
-<script type='text/javascript' src='https://www.weatherapi.com/weather/widget.ashx?loc=174248&wid=3&tu=1&div=weatherapi-weather-widget-3' async></script>
+
+    <script src="js/main.js"></script>
+    <script type='text/javascript'
+        src='https://www.weatherapi.com/weather/widget.ashx?loc=174248&wid=3&tu=1&div=weatherapi-weather-widget-3'
+        async></script>
 </body>
+
 </html>
